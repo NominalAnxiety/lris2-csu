@@ -5,40 +5,40 @@ build-backend = "setuptools.build_meta"
 
 [project]
 # Basic information about your project.
-name = "your-package-name" 
+name = "lris2csu"
 version = "0.1.0" 
-dependencies = []
-requires-python = ">=3.7"
+dependencies = ["cooethercat", "pyzmq"]
+requires-python = ">=3.12"
 authors = [
-  {name = "Your Name", email = "your.email@example.com"}
+  {name = "Jeb Bailey", email = "jibailey@caltech.edu"}
 ]
 maintainers = [
-  {name = "Your Name", email = "your.email@example.com"}
+  {name = "Caltech Optical Observatories", email = ""}
 ]
-description = "A brief description of your package"
+description = "A demo package for the LRIS2 Configurable Slit Unit"
 readme = "README.md" 
-license = { text = "MIT" }
-keywords = ["example", "package", "keywords"] 
+license = { text = "CC-BY-SA" }
+#keywords = ["example", "package", "keywords"]
 classifiers = [
   "Programming Language :: Python"
 ]
 
 [project.urls]
 # Various URLs related to your project. These links are displayed on PyPI.
-Homepage = "https://example.com" 
-Documentation = "https://readthedocs.org"
+#Homepage = "https://example.com"
+#Documentation = "https://readthedocs.org"
 Repository = "https://github.com/yourusername/your-repo"
 "Bug Tracker" = "https://github.com/yourusername/your-repo/issues" 
-Changelog = "https://github.com/yourusername/your-repo/blob/master/CHANGELOG.md"
+#Changelog = "https://github.com/yourusername/your-repo/blob/master/CHANGELOG.md"
 
-[project.scripts]
-# Defines command-line scripts for your package. Replace with your script and function.
-your-command = "your_module:your_function"
+#[project.scripts]
+## Defines command-line scripts for your lris2csu. Replace with your script and function.
+#your-command = "your_module:your_function"
 
 [project.optional-dependencies]
 # Optional dependencies that can be installed with extra tags, like "dev".
 dev = [
-  "pytest", 
-  "black",
+  "astropy",
+  "matplotlib",
   "flake8"
 ]
