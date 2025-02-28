@@ -1,4 +1,3 @@
-
 class SlitBar:
     """
     A SlitBar is a single actuator driving part of a slit mechanism.
