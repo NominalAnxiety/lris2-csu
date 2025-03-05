@@ -3,114 +3,122 @@ csu_daemon:
   zmq:
     command_address: "tcp://127.0.0.1:5555"  # Address/socket daemon subscribes to commands
     publish_address: "tcp://127.0.0.1:5556"  # Address/socket daemon publishes updates to
-  ethercat_device: "eth0"  # Device for connecting to the EtherCAT bus
+
+ethercat_device: "eth0"  # Device for connecting to the EtherCAT bus
+
+left_break:
+  bus_id: 25
+
+right_break:
+  bus_id: 26
+
 
 bar_pairs:
   - position: 10.0  # Y position in the overall slit unit
     left_motor:
-      slave_id: 1
+      bus_id: 1
       torque_limit: 2.0
       movement_velocity: 500.0
     right_motor:
-      slave_id: 2
+      bus_id: 2
       torque_limit: 2.0
       movement_velocity: 500.0
   - position: 20.0
     left_motor:
-      slave_id: 3
+      bus_id: 3
       torque_limit: 2.0
       movement_velocity: 500.0
     right_motor:
-      slave_id: 4
+      bus_id: 4
       torque_limit: 2.0
       movement_velocity: 500.0
   - position: 30.0
     left_motor:
-      slave_id: 5
+      bus_id: 5
       torque_limit: 2.0
       movement_velocity: 500.0
     right_motor:
-      slave_id: 6
+      bus_id: 6
       torque_limit: 2.0
       movement_velocity: 500.0
   - position: 40.0
     left_motor:
-      slave_id: 7
+      bus_id: 7
       torque_limit: 2.0
       movement_velocity: 500.0
     right_motor:
-      slave_id: 8
+      bus_id: 8
       torque_limit: 2.0
       movement_velocity: 500.0
   - position: 50.0
     left_motor:
-      slave_id: 9
+      bus_id: 9
       torque_limit: 2.0
       movement_velocity: 500.0
     right_motor:
-      slave_id: 10
+      bus_id: 10
       torque_limit: 2.0
       movement_velocity: 500.0
   - position: 60.0
     left_motor:
-      slave_id: 11
+      bus_id: 11
       torque_limit: 2.0
       movement_velocity: 500.0
     right_motor:
-      slave_id: 12
+      bus_id: 12
       torque_limit: 2.0
       movement_velocity: 500.0
   - position: 70.0
     left_motor:
-      slave_id: 13
+      bus_id: 13
       torque_limit: 2.0
       movement_velocity: 500.0
     right_motor:
-      slave_id: 14
+      bus_id: 14
       torque_limit: 2.0
       movement_velocity: 500.0
   - position: 80.0
     left_motor:
-      slave_id: 15
+      bus_id: 15
       torque_limit: 2.0
       movement_velocity: 500.0
     right_motor:
-      slave_id: 16
+      bus_id: 16
       torque_limit: 2.0
       movement_velocity: 500.0
   - position: 90.0
     left_motor:
-      slave_id: 17
+      bus_id: 17
       torque_limit: 2.0
       movement_velocity: 500.0
     right_motor:
-      slave_id: 18
+      bus_id: 18
       torque_limit: 2.0
       movement_velocity: 500.0
   - position: 100.0
     left_motor:
-      slave_id: 19
+      bus_id: 19
       torque_limit: 2.0
       movement_velocity: 500.0
     right_motor:
-      slave_id: 20
+      bus_id: 20
       torque_limit: 2.0
       movement_velocity: 500.0
   - position: 110.0
     left_motor:
-      slave_id: 21
+      bus_id: 21
       torque_limit: 2.0
       movement_velocity: 500.0
     right_motor:
-      slave_id: 22
+      bus_id: 22
       torque_limit: 2.0
       movement_velocity: 500.0
   - position: 120.0
     left_motor:
-      slave_id: 23
+      bus_id: 23
       torque_limit: 2.0
       movement_velocity: 500.0
     right_motor:
-      slave_id: 24
+      bus_id: 24
       torque_limit: 2.0
       movement_velocity: 500.0
