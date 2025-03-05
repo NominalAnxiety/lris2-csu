@@ -5,14 +5,15 @@ import threading
 import argparse
 import yaml
 
-from cooethercat.epos4 import EPOS4Bus
+from cooethercat.epos4 import EPOS4Bus, StatuswordStates
 
-from .slit import BarPair, MaskConfig, Slit, SlitBar
-from .util import zpipe, setup_logging
+from lris2csu.slit import BarPair, MaskConfig, Slit, SlitBar
+from lris2csu.util import zpipe, setup_logging
+from lris2csu.hardware import Bar, Break
 
 
 class CSUManager:
-    def __init__(self, config='csu.yaml', ethercat_device=None, connect=True):
+    def __init__(self, config='csu.yaml', connect=True):
 
         # Load and parse the configuration YAML file
         try:
@@ -21,19 +22,37 @@ class CSUManager:
         except Exception as e:
             raise RuntimeError(f"Failed to load configuration file '{config}': {e}")
 
-        self.bus = EPOS4Bus(ethercat_device)
-        if connect:
-            self.bus.openNetworkInterface()
-            self.bus.initializeSlaves()
+        # Figure out which IDs are what types of drives
+        id_types = {self.configuration['left_break']['bus_id']: Break,
+                       self.configuration['right_break']['bus_id']: Break}
 
+        bar_ids = [pair[m]['slave_id'] for pair in self.configuration['bar_pairs']
+                      for m in ('left_motor', 'right_motor')]
+        assert set(bar_ids).isdisjoint(id_types.keys())
+
+        id_types.update({sid: Bar for sid in bar_ids})
+        self.slave_types = id_types
+
+        # Create the bus
+        self.bus = EPOS4Bus(self.configuration['ethercat_device'])
+        if connect:
+            self.reset_bus()
+
+        # E
         self._bar_pairs : list[BarPair] = []
         for bar_name, epos_id_pair in self.configuration['bar_pairs']:
             id1, id2 = epos_id_pair
             self._bar_pairs.append(BarPair(self.bus.slaves[id1], self.bus.slaves[id2]))
 
+        # External Control
         self._cap_pipe, self._cap_pipe_thread = None, None
         self._control_thread = None
 
+    def reset_bus(self):
+        self.bus.closeNetworkInterface()  #TODO might fault if closed. make the lower level library a noop in that case
+        self.bus.openNetworkInterface()
+        self.bus.initialize_slaves(self.slave_types)
+        self.bus.configure_slaves()
 
     def begin_slit_control(self, start=True, daemon=False, context: zmq.Context = None):
         if self._control_thread is not None:
@@ -99,6 +118,7 @@ class CSUManager:
 
         """
         context = context or zmq.Context().instance()
+        self.reset_bus()
 
         getLogger(__name__).info('CSU control thread started')
         while True:
@@ -130,11 +150,13 @@ class CSUManager:
 
     def status(self):
         """ Returns: Dictionary of status information """
-        #this is playing fast and loos with the ethercat buss across threads
+        #TODO this is playing fast and loos with the ethercat buss across threads
+
         status = {
             'mask': MaskConfig([Slit(*(bp.get_position() + (SlitBar.SLIT_BAR_HEIGHT,))) for bp in self._bar_pairs]),
             'bars': {bp.y: (bp.bar1.engineering_status(), bp.bar2.engineering_status()) for bp in self._bar_pairs},
-            'config': self.configuration}
+            'config': self.configuration,
+            'salve_info':self.bus.get_slaves_info()}  #TODO is this ok outside of the motion thread
 
         return status
 
@@ -150,6 +172,48 @@ class CSUManager:
         else:
             raise RuntimeError('No pipe to worker')
 
+    def home_all_motors(self):
+        # TODO move this code to the devices
+        # TODO this is playing fast and loos with the ethercat buss across threads
+        try:
+            getLogger(__name__).info("Homing all axes")
+            self.bus.enablePDO()
+            self.bus.sendPDO()
+            self.bus.receivePDO()
+            self.bus.changeDeviceStatesPDO(StatuswordStates.OPERATION_ENABLED)
+            self.bus.performHoming()
+            getLogger(__name__).info("Target reached/homing attained")
+            self.bus.changeDeviceStatesPDO(StatuswordStates.QUICK_STOP_ACTIVE)
+            self.bus.disablePDO()
+            getLogger(__name__).info("Done homing")
+        except Exception as e:
+            getLogger(__name__).error(f"Error in HomingPDO: {e}")
+
+    def move_motors_to_position(self, id_positions_map:dict[int, int]):
+        # TODO move to within devices
+        # TODO this is playing fast and loos with the ethercat buss across threads
+        try:
+            getLogger(__name__).info("Moving to target positions")
+
+            # Handle the movement process
+            self.bus.enablePDO()
+            self.bus.sendPDO()
+            self.bus.receivePDO()
+            self.bus.changeDeviceStatesPDO(StatuswordStates.OPERATION_ENABLED)
+
+            # Use slave_ids to assign target positions to specific slaves
+            targetPositions = list(id_positions_map.values())
+            ids = list(id_positions_map.keys())
+            self.bus.goToPositions(targetPositions, slave_ids=ids, printActualPosition=True)
+
+            self.bus.changeDeviceStatesPDO(StatuswordStates.QUICK_STOP_ACTIVE)
+            self.bus.disablePDO()
+
+            getLogger(__name__).info("Done moving")
+
+        except Exception as e:
+            getLogger(__name__).error(f"Error in PPMPDO: {e}")
+
 
 def parse_cl():
     parser = argparse.ArgumentParser(description='LRIS2 CSU Server', add_help=True)
@@ -159,7 +223,7 @@ def parse_cl():
                         help='Status Port', default='8890')
     parser.add_argument('--eth', dest='ethernet_device', action='store', required=True, type=str,
                         help='Ethercat device (e.g. eth0)', default='eth0')
-    parser.add_argument('--cfg', dest='config', action='store', required=False, type=str,
+    parser.add_argument('--cfg', dest='config_yaml', action='store', required=False, type=str,
                         help='Configuration YAML', default='')
     return parser.parse_args()
 
@@ -206,7 +270,7 @@ if __name__ == '__main__':
     socket.bind(cmd_addr)
 
     # Start up CSU manager
-    csu = CSUManager(args.ethernet_device)
+    csu = CSUManager(args.config_yaml, connect=False)
     csu.begin_slit_control(context=context, start=True, daemon=False)
 
     getLogger(__name__).info(f'Accepting commands on {cmd_addr}')
@@ -252,7 +316,7 @@ if __name__ == '__main__':
             socket.send_pyobj({'resp': 'OK', 'code': 0})
 
         elif cmd == 'abort':
-            csu.abort(arg)
+            csu.abort()
             socket.send_pyobj({'resp': 'OK', 'code': 0})
 
         else:
