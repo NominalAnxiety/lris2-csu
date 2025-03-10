@@ -5,6 +5,8 @@ import zmq
 import os
 import uuid
 
+
+
 def setup_logging(name):
     ref = importlib.resources.files('lris2csu.config').joinpath('logging.yaml')
     with importlib.resources.as_file(ref) as path:
@@ -36,6 +38,14 @@ def setup_logging(name):
     return logging.getLogger(name)
 
 
+def load_default_config():
+    ref = importlib.resources.files('lris2csu.config').joinpath('csu.yaml')
+    with importlib.resources.as_file(ref) as path:
+        if os.path.exists(path):
+            with open(path, 'rt') as f:
+                config = yaml.safe_load(f.read())
+    return config
+
 
 class AbortedException(Exception):
     pass
@@ -61,5 +71,5 @@ def zpipe(ctx):
     a.hwm = b.hwm = 1
     iface = "inproc://%s" % uuid.uuid4().hex
     a.bind(iface)
-    b.connect(iface)
+    b.open(iface)
     return a, b

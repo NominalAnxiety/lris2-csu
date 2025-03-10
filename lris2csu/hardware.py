@@ -45,27 +45,27 @@ class Bar(EPOS4Motor):
         tx_address_ints = makePDOMapping(ppm_tx)
 
         # Assign rx map
-        self.SDOWrite(self.objectDictionary.NUMBER_OF_MAPPED_OBJECTS_IN_RXPDO_1, 0)
+        self._sdo_write(self.objectDictionary.NUMBER_OF_MAPPED_OBJECTS_IN_RXPDO_1, 0)
         for i, addressInt in enumerate(rx_address_ints):
-            self.SDOWrite((0x1600, i + 1, 'I'), addressInt)
-        self.SDOWrite(self.objectDictionary.NUMBER_OF_MAPPED_OBJECTS_IN_RXPDO_1, len(ppm_rx))
+            self._sdo_write((0x1600, i + 1, 'I'), addressInt)
+        self._sdo_write(self.objectDictionary.NUMBER_OF_MAPPED_OBJECTS_IN_RXPDO_1, len(ppm_rx))
 
         # Assign tx map
-        self.SDOWrite(self.objectDictionary.NUMBER_OF_MAPPED_OBJECTS_IN_TXPDO_1, 0)
+        self._sdo_write(self.objectDictionary.NUMBER_OF_MAPPED_OBJECTS_IN_TXPDO_1, 0)
         for i, addressInt in enumerate(tx_address_ints):
-            self.SDOWrite((0x1A00, i + 1, 'I'), addressInt)
-        self.SDOWrite(self.objectDictionary.NUMBER_OF_MAPPED_OBJECTS_IN_TXPDO_1, len(ppm_tx))
+            self._sdo_write((0x1A00, i + 1, 'I'), addressInt)
+        self._sdo_write(self.objectDictionary.NUMBER_OF_MAPPED_OBJECTS_IN_TXPDO_1, len(ppm_tx))
 
         self.currentRxPDOMap = ppm_rx
         self.currentTxPDOMap = ppm_tx
 
         # Configure Digital Inputs (example)
-        self.SDOWrite(self.objectDictionary.DIGITAL_INPUT_CONFIGURATION_DGIN_1, 255)
-        self.SDOWrite(self.objectDictionary.DIGITAL_INPUT_CONFIGURATION_DGIN_2, 1)
-        self.SDOWrite(self.objectDictionary.DIGITAL_INPUT_CONFIGURATION_DGIN_1, 0)
+        self._sdo_write(self.objectDictionary.DIGITAL_INPUT_CONFIGURATION_DGIN_1, 255)
+        self._sdo_write(self.objectDictionary.DIGITAL_INPUT_CONFIGURATION_DGIN_2, 1)
+        self._sdo_write(self.objectDictionary.DIGITAL_INPUT_CONFIGURATION_DGIN_1, 0)
 
         # Set the home offset move distance
-        self.SDOWrite(self.objectDictionary.HOME_OFFSET_MOVE_DISTANCE, -622080)
+        self._sdo_write(self.objectDictionary.HOME_OFFSET_MOVE_DISTANCE, -622080)
         getLogger(__name__).debug(f"Configuring device {self} complete.")
 
 
@@ -106,25 +106,25 @@ class Break(EPOS4Motor):
         tx_address_ints = makePDOMapping(ppm_tx)
 
         # Assign rx map
-        self.SDOWrite(self.objectDictionary.NUMBER_OF_MAPPED_OBJECTS_IN_RXPDO_1, 0)
+        self.sdo_write(self.objectDictionary.NUMBER_OF_MAPPED_OBJECTS_IN_RXPDO_1, 0)
         for i, addressInt in enumerate(rx_address_ints):
-            self.SDOWrite((0x1600, i + 1, 'I'), addressInt)
-        self.SDOWrite(self.objectDictionary.NUMBER_OF_MAPPED_OBJECTS_IN_RXPDO_1, len(ppm_rx))
+            self.sdo_write((0x1600, i + 1, 'I'), addressInt)
+        self.sdo_write(self.objectDictionary.NUMBER_OF_MAPPED_OBJECTS_IN_RXPDO_1, len(ppm_rx))
 
         # Assign tx map
-        self.SDOWrite(self.objectDictionary.NUMBER_OF_MAPPED_OBJECTS_IN_TXPDO_1, 0)
+        self.sdo_write(self.objectDictionary.NUMBER_OF_MAPPED_OBJECTS_IN_TXPDO_1, 0)
         for i, addressInt in enumerate(tx_address_ints):
-            self.SDOWrite((0x1A00, i + 1, 'I'), addressInt)
-        self.SDOWrite(self.objectDictionary.NUMBER_OF_MAPPED_OBJECTS_IN_TXPDO_1, len(ppm_tx))
+            self.sdo_write((0x1A00, i + 1, 'I'), addressInt)
+        self.sdo_write(self.objectDictionary.NUMBER_OF_MAPPED_OBJECTS_IN_TXPDO_1, len(ppm_tx))
 
         self.currentRxPDOMap = ppm_rx
         self.currentTxPDOMap = ppm_tx
 
         # Configure Digital Inputs (example)
-        self.SDOWrite(self.objectDictionary.DIGITAL_INPUT_CONFIGURATION_DGIN_1, 255)
-        self.SDOWrite(self.objectDictionary.DIGITAL_INPUT_CONFIGURATION_DGIN_2, 1)
-        self.SDOWrite(self.objectDictionary.DIGITAL_INPUT_CONFIGURATION_DGIN_1, 0)
+        self.sdo_write(self.objectDictionary.DIGITAL_INPUT_CONFIGURATION_DGIN_1, 255)
+        self.sdo_write(self.objectDictionary.DIGITAL_INPUT_CONFIGURATION_DGIN_2, 1)
+        self.sdo_write(self.objectDictionary.DIGITAL_INPUT_CONFIGURATION_DGIN_1, 0)
 
         # Set the home offset move distance
-        self.SDOWrite(self.objectDictionary.HOME_OFFSET_MOVE_DISTANCE, -622080)
+        self.sdo_write(self.objectDictionary.HOME_OFFSET_MOVE_DISTANCE, -622080)
         getLogger(__name__).debug(f"Configuring device {self} complete.")

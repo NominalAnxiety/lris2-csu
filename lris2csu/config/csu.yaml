@@ -4,7 +4,7 @@ csu_daemon:
     command_address: "tcp://127.0.0.1:5555"  # Address/socket daemon subscribes to commands
     publish_address: "tcp://127.0.0.1:5556"  # Address/socket daemon publishes updates to
 
-ethercat_device: "eth0"  # Device for connecting to the EtherCAT bus
+ethercat_device: "eno1"  # Device for connecting to the EtherCAT bus
 
 left_break:
   bus_id: 25

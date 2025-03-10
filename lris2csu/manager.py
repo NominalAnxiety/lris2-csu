@@ -49,8 +49,8 @@ class CSUManager:
         self._control_thread = None
 
     def reset_bus(self):
-        self.bus.closeNetworkInterface()  #TODO might fault if closed. make the lower level library a noop in that case
-        self.bus.openNetworkInterface()
+        self.bus.close()  #TODO might fault if closed. make the lower level library a noop in that case
+        self.bus.open()
         self.bus.initialize_slaves(self.slave_types)
         self.bus.configure_slaves()
 
