@@ -12,7 +12,7 @@ class Bar:
 
     def move_to(self, position: float):
         """Moves the slit bar to a defined position."""
-        self._epos_bus.goToPositions(position, slave_ids=self._id)
+        self._epos_bus.move_to(position, slave_ids=self._id)
 
     def engineering_status(self):
         pass

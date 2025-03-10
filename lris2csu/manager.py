@@ -177,14 +177,14 @@ class CSUManager:
         # TODO this is playing fast and loos with the ethercat buss across threads
         try:
             getLogger(__name__).info("Homing all axes")
-            self.bus.enablePDO()
+            self.bus.enable_pdo()
             self.bus.sendPDO()
             self.bus.receivePDO()
             self.bus.changeDeviceStatesPDO(StatuswordStates.OPERATION_ENABLED)
             self.bus.performHoming()
             getLogger(__name__).info("Target reached/homing attained")
             self.bus.changeDeviceStatesPDO(StatuswordStates.QUICK_STOP_ACTIVE)
-            self.bus.disablePDO()
+            self.bus.disable_pdo()
             getLogger(__name__).info("Done homing")
         except Exception as e:
             getLogger(__name__).error(f"Error in HomingPDO: {e}")
@@ -196,7 +196,7 @@ class CSUManager:
             getLogger(__name__).info("Moving to target positions")
 
             # Handle the movement process
-            self.bus.enablePDO()
+            self.bus.enable_pdo()
             self.bus.sendPDO()
             self.bus.receivePDO()
             self.bus.changeDeviceStatesPDO(StatuswordStates.OPERATION_ENABLED)
@@ -204,10 +204,10 @@ class CSUManager:
             # Use slave_ids to assign target positions to specific slaves
             targetPositions = list(id_positions_map.values())
             ids = list(id_positions_map.keys())
-            self.bus.goToPositions(targetPositions, slave_ids=ids, printActualPosition=True)
+            self.bus.move_to(targetPositions, slave_ids=ids, print=True)
 
             self.bus.changeDeviceStatesPDO(StatuswordStates.QUICK_STOP_ACTIVE)
-            self.bus.disablePDO()
+            self.bus.disable_pdo()
 
             getLogger(__name__).info("Done moving")
 
