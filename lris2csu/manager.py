@@ -178,8 +178,7 @@ class CSUManager:
         try:
             getLogger(__name__).info("Homing all axes")
             self.bus.enable_pdo()
-            self.bus.sendPDO()
-            self.bus.receivePDO()
+            # self.bus._send_receive_pdo()
             self.bus.changeDeviceStatesPDO(StatuswordStates.OPERATION_ENABLED)
             self.bus.home_motors()
             getLogger(__name__).info("Target reached/homing attained")
@@ -197,8 +196,7 @@ class CSUManager:
 
             # Handle the movement process
             self.bus.enable_pdo()
-            self.bus.sendPDO()
-            self.bus.receivePDO()
+            # self.bus._send_receive_pdo()
             self.bus.changeDeviceStatesPDO(StatuswordStates.OPERATION_ENABLED)
 
             # Use slave_ids to assign target positions to specific slaves
