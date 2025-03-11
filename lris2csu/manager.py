@@ -181,7 +181,7 @@ class CSUManager:
             self.bus.sendPDO()
             self.bus.receivePDO()
             self.bus.changeDeviceStatesPDO(StatuswordStates.OPERATION_ENABLED)
-            self.bus.performHoming()
+            self.bus.home_motors()
             getLogger(__name__).info("Target reached/homing attained")
             self.bus.changeDeviceStatesPDO(StatuswordStates.QUICK_STOP_ACTIVE)
             self.bus.disable_pdo()
