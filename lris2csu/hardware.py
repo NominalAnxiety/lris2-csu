@@ -18,9 +18,9 @@ class Bar(EPOS4Motor):
 
     def config_func(self, bus_id):
         """ Configures an EPOS4 Micro TRB 12CC device """
-        getLogger(__name__).debug(f"Configuring device {self} (EPOS4 Micro 24/5)")
-        assert bus_id == self.node  #TODO check that this is actually an attribute
-            #
+        getLogger(__name__).debug(f"Configuring device {self} via config_func (EPOS4 Micro 24/5)")
+        assert bus_id == self.node
+
         # Define the Process Data Objects for PPM (Rx and Tx)
         ppm_rx = [
             self.objectDictionary.CONTROLWORD,
