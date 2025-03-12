@@ -5,7 +5,8 @@ import threading
 import argparse
 import yaml
 
-from cooethercat.epos4 import EPOS4Bus, StatuswordStates
+from cooethercat.helpers import StatuswordStates
+from cooethercat import EPOS4Bus
 
 from lris2csu.slit import BarPair, MaskConfig, Slit, SlitBar
 from lris2csu.util import zpipe, setup_logging

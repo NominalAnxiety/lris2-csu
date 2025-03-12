@@ -1,4 +1,5 @@
-from cooethercat.epos4 import EPOS4Bus
+from cooethercat import EPOS4Bus
+
 
 class Bar:
     """
