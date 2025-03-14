@@ -10,7 +10,7 @@ from cooethercat import EPOS4Bus
 
 from lris2csu.slit import BarPair, MaskConfig, Slit, SlitBar
 from lris2csu.util import zpipe, setup_logging
-from lris2csu.hardware import Bar, Break
+from lris2csu.hardware import BarMotor, Break
 
 
 class CSUManager:
@@ -19,7 +19,7 @@ class CSUManager:
         # Load and parse the configuration YAML file
         try:
             with open(config, 'r') as f:
-                self.configuration: dict = yaml.safe_load(f)
+                self.configuration: dict = yaml.full_load(f)
         except Exception as e:
             raise RuntimeError(f"Failed to load configuration file '{config}': {e}")
 
@@ -31,7 +31,7 @@ class CSUManager:
                       for m in ('left_motor', 'right_motor')]
         assert set(bar_ids).isdisjoint(id_types.keys())
 
-        id_types.update({sid: Bar for sid in bar_ids})
+        id_types.update({sid: BarMotor for sid in bar_ids})
         self.slave_types = id_types
 
         # Create the bus

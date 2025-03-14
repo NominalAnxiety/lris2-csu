@@ -1,4 +1,4 @@
-import importlib
+import importlib.resources
 import yaml
 import logging
 import zmq
@@ -12,7 +12,7 @@ def setup_logging(name):
     with importlib.resources.as_file(ref) as path:
         if os.path.exists(path):
             with open(path, 'rt') as f:
-                config = yaml.safe_load(f.read())
+                config = yaml.full_load(f.read())
 
     # postprocess loggers dict
     # keys are program names values are either
@@ -43,7 +43,7 @@ def load_default_config():
     with importlib.resources.as_file(ref) as path:
         if os.path.exists(path):
             with open(path, 'rt') as f:
-                config = yaml.safe_load(f.read())
+                config = yaml.full_load(f)
     return config
 
 
