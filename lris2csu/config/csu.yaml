@@ -4,6 +4,17 @@ daemon:
     command_address: "tcp://127.0.0.1:5555"  # Address/socket daemon subscribes to commands
     publish_address: "tcp://127.0.0.1:5556"  # Address/socket daemon publishes updates to
 
+#1.563 mm/tooth
+#370:1 gear ratio
+# 38 teeth on motor
+
+# 59.69 mm/rev
+#gear head 29198/79*1024 count/rev
+# = 0.1577159475 um/count
+#67.072 @ 1000000
+#28.178 @ 86
+# = 0.038897 um/count
+#looks to be about 1/4th adopt 0.03942899
 hardware: !CSUHardwareConfig
   ethercat_device: "eno1"  # Device for connecting to the EtherCAT bus
   left_brake: 'lris2.csu_break.left'
@@ -15,13 +26,14 @@ hardware: !CSUHardwareConfig
         bus_id: 23
         torque_limit: 2.0
         speed: 6000
-        mm_per_count: 1
+        um_per_count: 0.03942899
         reversed: False
+        offset_mm: 30.96
       right: !BarConfig
         bus_id: 11
         torque_limit: 2.0
         speed: 6000
-        mm_per_count: 1
+        um_per_count: 0.03942899
         reversed: True
     - !BarPairConfig
       id: 10
@@ -29,27 +41,29 @@ hardware: !CSUHardwareConfig
         bus_id: 22
         torque_limit: 2.0
         speed: 6000
-        mm_per_count: 1
+        um_per_count: 0.03942899
         reversed: False
       right: !BarConfig
         bus_id: 10
         torque_limit: 2.0
         speed: 6000
-        mm_per_count: 1
+        um_per_count: 0.03942899
         reversed: True
+        offset_mm: 7.94
     - !BarPairConfig
       id: 9
       left: !BarConfig
         bus_id: 21
         torque_limit: 2.0
         speed: 6000
-        mm_per_count: 1
+        um_per_count: 0.03942899
         reversed: False
+        offset_mm: 30.96
       right: !BarConfig
         bus_id: 9
         torque_limit: 2.0
         speed: 6000
-        mm_per_count: 1
+        um_per_count: 0.03942899
         reversed: True
     - !BarPairConfig
       id: 8
@@ -57,27 +71,29 @@ hardware: !CSUHardwareConfig
         bus_id: 20
         torque_limit: 2.0
         speed: 6000
-        mm_per_count: 1
+        um_per_count: 0.03942899
         reversed: False
       right: !BarConfig
         bus_id: 8
         torque_limit: 2.0
         speed: 6000
-        mm_per_count: 1
+        um_per_count: 0.03942899
         reversed: True
+        offset_mm: 7.94
     - !BarPairConfig
       id: 7
       left: !BarConfig
         bus_id: 19
         torque_limit: 2.0
         speed: 6000
-        mm_per_count: 1
+        um_per_count: 0.03942899
         reversed: False
+        offset_mm: 30.96
       right: !BarConfig
         bus_id: 7
         torque_limit: 2.0
         speed: 6000
-        mm_per_count: 1
+        um_per_count: 0.03942899
         reversed: True
     - !BarPairConfig
       id: 6
@@ -85,27 +101,29 @@ hardware: !CSUHardwareConfig
         bus_id: 18
         torque_limit: 2.0
         speed: 6000
-        mm_per_count: 1
+        um_per_count: 0.03942899
         reversed: False
       right: !BarConfig
         bus_id: 6
         torque_limit: 2.0
         speed: 6000
-        mm_per_count: 1
+        um_per_count: 0.03942899
         reversed: True
+        offset_mm: 7.94
     - !BarPairConfig
       id: 5
       left: !BarConfig
         bus_id: 0
         torque_limit: 2.0
         speed: 6000
-        mm_per_count: 1
+        um_per_count: 0.03942899
         reversed: True
+        offset_mm: 30.96
       right: !BarConfig
         bus_id: 12
         torque_limit: 2.0
         speed: 6000
-        mm_per_count: 1
+        um_per_count: 0.03942899
         reversed: False
     - !BarPairConfig
       id: 4
@@ -113,27 +131,29 @@ hardware: !CSUHardwareConfig
         bus_id: 1
         torque_limit: 2.0
         speed: 6000
-        mm_per_count: 1
+        um_per_count: 0.03942899
         reversed: True
       right: !BarConfig
         bus_id: 13
         torque_limit: 2.0
         speed: 6000
-        mm_per_count: 1
+        um_per_count: 0.03942899
         reversed: False
+        offset_mm: 7.94
     - !BarPairConfig
       id: 3
       left: !BarConfig
         bus_id: 2
         torque_limit: 2.0
         speed: 6000
-        mm_per_count: 1
+        um_per_count: 0.03942899
         reversed: True
+        offset_mm: 30.96
       right: !BarConfig
         bus_id: 14
         torque_limit: 2.0
         speed: 6000
-        mm_per_count: 1
+        um_per_count: 0.03942899
         reversed: False
     - !BarPairConfig
       id: 2
@@ -141,27 +161,29 @@ hardware: !CSUHardwareConfig
         bus_id: 3
         torque_limit: 2.0
         speed: 6000
-        mm_per_count: 1
+        um_per_count: 0.03942899
         reversed: True
       right: !BarConfig
         bus_id: 15
         torque_limit: 2.0
         speed: 6000
-        mm_per_count: 1
+        um_per_count: 0.03942899
         reversed: False
+        offset_mm: 7.94
     - !BarPairConfig
       id: 1
       left: !BarConfig
         bus_id: 4
         torque_limit: 2.0
         speed: 6000
-        mm_per_count: 1
+        um_per_count: 0.03942899
         reversed: True
+        offset_mm: 30.96
       right: !BarConfig
         bus_id: 16
         torque_limit: 2.0
         speed: 6000
-        mm_per_count: 1
+        um_per_count: 0.03942899
         reversed: False
     - !BarPairConfig
       id: 0
@@ -169,11 +191,12 @@ hardware: !CSUHardwareConfig
         bus_id: 5
         torque_limit: 2.0
         speed: 6000
-        mm_per_count: 1
+        um_per_count: 0.03942899
         reversed: True
       right: !BarConfig
         bus_id: 17
         torque_limit: 2.0
         speed: 6000
-        mm_per_count: 1
+        um_per_count: 0.03942899
         reversed: False
+        offset_mm: 7.94
