@@ -5,15 +5,64 @@ import threading
 import argparse
 import yaml
 
-from cooethercat.helpers import StatuswordStates
+from cooethercat.helpers import StatuswordStates, HomingMethods
 from cooethercat import EPOS4Bus
 
 from lris2csu.slit import BarPair, MaskConfig, Slit, SlitBar
 from lris2csu.util import zpipe, setup_logging
-from lris2csu.hardware import BarMotor, Break
+from lris2csu.hardware import BarMotor, BrakeMotor, CSUHardwareConfig
+from collections import defaultdict
 
 
-class CSUManager:
+class CSUHardware:
+    def __init__(self, config:CSUHardwareConfig|str='csu.yaml', connect=False):
+
+        if not isinstance(config, CSUHardwareConfig):
+            # Load and parse the configuration YAML file
+            try:
+                with open(config, 'r') as f:
+                    config: dict = yaml.full_load(config)['hardware']
+            except Exception as e:
+                raise ValueError(f"Failed to load configuration file '{config}': {e}")
+
+        self.configuration :CSUHardwareConfig = config
+
+        # self.left_brake = BrakeMotor(self.configuration.left_brake)
+        # self.left_brake = BrakeMotor(self.configuration.right_brake)
+
+        self.slave_types = defaultdict(lambda: BarMotor)
+
+        # Create the bus
+        self.bus = EPOS4Bus(self.configuration.ethercat_device)
+        if connect:
+            self.reset_bus()
+
+    def reset_bus(self):
+        self.bus.close()  # TODO might fault if closed. make the lower level library a noop in that case
+        self.bus.open()
+        self.bus.initialize_slaves(self.slave_types)
+        self.bus.configure_slaves()
+
+    def calibrate(self):
+        for s in self.bus.slaves:
+            if self.configuration.bar_by_dev_id(s.node).reversed:
+                method = HomingMethods.CURRENT_THRESHOLD_POS_SPEED_AND_INDEX
+            else:
+                method = HomingMethods.CURRENT_THRESHOLD_NEG_SPEED_AND_INDEX
+            s.home_via_method(method)
+
+    def configure(self, mask_config:MaskConfig):
+        bar_pos = self.configuration.compute_bar_count_positions(mask_config.to_dict())
+        self.bus.move_to(bar_pos, blocking=False)
+
+    def halt(self):
+        self.bus.disable_pdo()
+        for s in self.bus.slaves:
+            s.halt()
+
+
+
+class CSUServer:
     def __init__(self, config='csu.yaml', connect=True):
 
         # Load and parse the configuration YAML file
@@ -23,37 +72,9 @@ class CSUManager:
         except Exception as e:
             raise RuntimeError(f"Failed to load configuration file '{config}': {e}")
 
-        # Figure out which IDs are what types of drives
-        id_types = {self.configuration['left_break']['bus_id']: Break,
-                       self.configuration['right_break']['bus_id']: Break}
+        self.csu = CSUHardware(self.configuration['hardware'])
+        self.mktl = ...
 
-        bar_ids = [pair[m]['slave_id'] for pair in self.configuration['bar_pairs']
-                      for m in ('left_motor', 'right_motor')]
-        assert set(bar_ids).isdisjoint(id_types.keys())
-
-        id_types.update({sid: BarMotor for sid in bar_ids})
-        self.slave_types = id_types
-
-        # Create the bus
-        self.bus = EPOS4Bus(self.configuration['ethercat_device'])
-        if connect:
-            self.reset_bus()
-
-        # E
-        self._bar_pairs : list[BarPair] = []
-        for bar_name, epos_id_pair in self.configuration['bar_pairs']:
-            id1, id2 = epos_id_pair
-            self._bar_pairs.append(BarPair(self.bus.slaves[id1], self.bus.slaves[id2]))
-
-        # External Control
-        self._cap_pipe, self._cap_pipe_thread = None, None
-        self._control_thread = None
-
-    def reset_bus(self):
-        self.bus.close()  #TODO might fault if closed. make the lower level library a noop in that case
-        self.bus.open()
-        self.bus.initialize_slaves(self.slave_types)
-        self.bus.configure_slaves()
 
     def begin_slit_control(self, start=True, daemon=False, context: zmq.Context = None):
         if self._control_thread is not None:

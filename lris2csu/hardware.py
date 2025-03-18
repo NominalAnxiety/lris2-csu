@@ -32,7 +32,10 @@ class CSUHardwareConfig:
         }
         return dumper.represent_mapping(cls.yaml_tag, mapping)
 
-    def compute_bar_count_positions(self, pos_width_dict: dict[int, tuple[float, float]]) -> dict:
+    def bar_by_dev_id(self, id):
+        return {b.bus_id:b for bp in self.bar_pairs.values() for b in (bp.left, bp.right)}[id]
+
+    def compute_bar_count_positions(self, pos_width_dict: dict[int, tuple[float, float]]) -> dict[int]:
         """
         Computes the bar count positions for a given bar pair configuration.
 
@@ -247,7 +250,7 @@ class BarMotor(EPOS4Motor):
     #     slave.dc_sync(act=True, sync0_cycle_time=1000000)
 
 
-class BreakMotor(EPOS4Motor):
+class BrakeMotor(EPOS4Motor):
     def engage(self):
         raise NotImplementedError
 
@@ -255,7 +258,7 @@ class BreakMotor(EPOS4Motor):
         raise NotImplementedError
 
     def config_func(self, bus_id):
-        getLogger(__name__).debug(f"Configuring BreakMotor device {self} via "
+        getLogger(__name__).debug(f"Configuring BrakeMotor device {self} via "
                                   f"config_func (EPOS4 Micro 24/5) at bus node {self.node}")
         assert bus_id == self.node
             #

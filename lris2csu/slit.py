@@ -160,3 +160,7 @@ class MaskConfig:
 
     def __repr__(self):
         return f"MaskConfig(slits={self.slits})"
+
+    def to_dict(self):
+        #TODO
+        return {}
