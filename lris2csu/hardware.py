@@ -119,7 +119,8 @@ class BarConfig:
         if self.um_per_count<0:
             assert reversed==True, 'If um_per_count is negative, reversed must be True'
         if reversed and self.um_per_count>0:
-            getLogger(__name__).warning(f'Inverting um_per_count ({um_per_count}) for bus_id {bus_id} as reversed is set.')
+            getLogger(__name__).warning(f'Inverting um_per_count ({um_per_count}) for bus_id {bus_id} as '
+            f'reversed is set. Consider defining with a negative for better clarity.')
             self.um_per_count=-self.um_per_count
 
     def __repr__(self):

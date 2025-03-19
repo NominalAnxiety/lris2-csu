@@ -38,28 +38,35 @@ class CSUHardware:
             self.reset_bus()
 
     def reset_bus(self):
-        self.bus.close()  # TODO might fault if closed. make the lower level library a noop in that case
+        # self.bus.close()  # TODO might fault if closed. make the lower level library a noop in that case
         self.bus.open()
         self.bus.initialize_slaves(self.slave_types)
         self.bus.configure_slaves()
 
     def calibrate(self):
+        self.bus.disable_pdo()
         for s in self.bus.slaves:
             if self.configuration.bar_by_dev_id(s.node).reversed:
                 method = HomingMethods.CURRENT_THRESHOLD_POS_SPEED_AND_INDEX
             else:
                 method = HomingMethods.CURRENT_THRESHOLD_NEG_SPEED_AND_INDEX
-            s.home_via_method(method)
+            s.home_via_method(method, current_threshold=350, monitor=None, timeout=30)
 
     def configure(self, mask_config:MaskConfig):
         bar_pos = self.configuration.compute_bar_count_positions(mask_config.to_dict())
-        self.bus.move_to(bar_pos, blocking=False)
+        self.bus.enable_pdo()
+        self.bus.move_to(bar_pos, blocking=True)
+        self.bus.disable_pdo()
 
     def halt(self):
         self.bus.disable_pdo()
         for s in self.bus.slaves:
             s.halt()
 
+    def status(self):
+        return {id: (self.bus.slaves[bp.left.bus_id].debug_info_sdo,
+                     self.bus.slaves[bp.right.bus_id].debug_info_sdo)
+                for id, bp in self.configuration.bar_pairs.items()}
 
 
 class CSUServer:
