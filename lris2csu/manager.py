@@ -8,7 +8,7 @@ import yaml
 from cooethercat.helpers import StatuswordStates, HomingMethods
 from cooethercat import EPOS4Bus
 
-from lris2csu.slit import BarPair, MaskConfig, Slit, SlitBar
+from lris2csu.slit import MaskConfig, Slit
 from lris2csu.util import zpipe, setup_logging
 from lris2csu.hardware import BarMotor, BrakeMotor, CSUHardwareConfig
 from collections import defaultdict
