@@ -42,7 +42,9 @@ class CSUHardware:
             self.reset_bus()
 
     def reset_bus(self):
-        # self.bus.close()  # TODO might fault if closed. make the lower level library a noop in that case
+        # TODO Closing the bus when it isn't open causes very odd behavior but raises no exceptions
+        #  likely due to an issue in pysoem
+        # self.bus.close()
         self.bus.open()
         self.bus.initialize_slaves(self.slave_types)
         self.bus.configure_slaves()
@@ -54,7 +56,9 @@ class CSUHardware:
                 method = HomingMethods.CURRENT_THRESHOLD_POS_SPEED_AND_INDEX
             else:
                 method = HomingMethods.CURRENT_THRESHOLD_NEG_SPEED_AND_INDEX
-            s.home_via_method(method, current_threshold=350, monitor=None, timeout=30)
+            s.home_via_method(method, current_threshold=350, monitor=None, timeout=30, setup_only=True)
+        self.bus.enable_pdo()
+        self.bus.execute_homing()
 
     def configure(self, mask_config:MaskConfig, speed=8000):
         bar_pos = self.configuration.compute_bar_count_positions(mask_config.to_dict())

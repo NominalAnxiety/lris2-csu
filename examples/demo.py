@@ -11,7 +11,7 @@ csu = CSUHardware(cfg['hardware'])
 
 csu.reset_bus()
 
-# csu.calibrate()
+csu.calibrate()
 
 
 stair_mask = MaskConfig(tuple(Slit(i, 130+i*10-6*10, 20) for i in range(12)))
