@@ -42,12 +42,7 @@ class CSUHardware:
             self.reset_bus()
 
     def reset_bus(self):
-        # TODO Closing the bus when it isn't open causes very odd behavior but raises no exceptions
-        #  likely due to an issue in pysoem
-        # self.bus.close()
-        self.bus.open()
-        self.bus.initialize_slaves(self.slave_types)
-        self.bus.configure_slaves()
+        self.bus.initialize(self.slave_types)
 
     def calibrate(self):
         self.bus.disable_pdo()

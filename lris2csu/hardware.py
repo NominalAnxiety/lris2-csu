@@ -1,12 +1,13 @@
 from logging import getLogger
+import yaml
+from typing import NamedTuple
+
 from cooethercat import EPOS4Motor
 from cooethercat.helpers import make_pdo_mapping
-import yaml
 
 
 class CSUHardwareConfig:
     yaml_tag = u'!CSUHardwareConfig'
-
 
     def __init__(self, ethercat_device:str, bar_pairs:list["BarPairConfig"], left_brake, right_brake):
         self.ethercat_device = ethercat_device
@@ -155,39 +156,27 @@ yaml.add_constructor(u'!BarConfig', BarConfig.from_yaml)
 
 
 class BarMotor(EPOS4Motor):
-    # def home(self):
-    #     pass
-    #
-    # def goto(self, x):
-    #     pass
-    #
-    # def position(self):
-    #     return 0
-    #
-    # def status(self):
-    #     return {}
-
     def config_func(self, bus_id):
         getLogger(__name__).debug(f"Configuring BarMotor device {self} via config_func (EPOS4 Micro 24/5) at bus node {self.node}")
         assert bus_id == self.node
 
         # Define the Process Data Objects for PPM (Rx and Tx)
         ppm_rx = [
-            self.object_dict.CONTROLWORD,
-            self.object_dict.TARGET_POSITION,
-            self.object_dict.PROFILE_ACCELERATION,
-            self.object_dict.PROFILE_DECELERATION,
-            self.object_dict.PROFILE_VELOCITY,
-            self.object_dict.MODES_OF_OPERATION,
-            self.object_dict.PHYSICAL_OUTPUTS
+            self.ADDRESS.CONTROLWORD,
+            self.ADDRESS.TARGET_POSITION,
+            self.ADDRESS.PROFILE_ACCELERATION,
+            self.ADDRESS.PROFILE_DECELERATION,
+            self.ADDRESS.PROFILE_VELOCITY,
+            self.ADDRESS.MODES_OF_OPERATION,
+            self.ADDRESS.PHYSICAL_OUTPUTS
         ]
         ppm_tx = [
-            self.object_dict.STATUSWORD,
-            self.object_dict.POSITION_ACTUAL_VALUE,
-            self.object_dict.VELOCITY_ACTUAL_VALUE,
-            self.object_dict.FOLLOWING_ERROR_ACTUAL_VALUE,
-            self.object_dict.MODES_OF_OPERATION_DISPLAY,
-            self.object_dict.DIGITAL_INPUTS
+            self.ADDRESS.STATUSWORD,
+            self.ADDRESS.POSITION_ACTUAL_VALUE,
+            self.ADDRESS.VELOCITY_ACTUAL_VALUE,
+            self.ADDRESS.FOLLOWING_ERROR_ACTUAL_VALUE,
+            self.ADDRESS.MODES_OF_OPERATION_DISPLAY,
+            self.ADDRESS.DIGITAL_INPUTS
         ]
 
         # Create rx and tx map integers
@@ -195,24 +184,24 @@ class BarMotor(EPOS4Motor):
         tx_address_ints = make_pdo_mapping(ppm_tx)
 
         # Assign rx map
-        self._sdo_write(self.object_dict.NUMBER_OF_MAPPED_OBJECTS_IN_RXPDO_1, 0)
+        self._sdo_write(self.ADDRESS.NUMBER_OF_MAPPED_OBJECTS_IN_RXPDO_1, 0)
         for i, addressInt in enumerate(rx_address_ints):
             self._sdo_write((0x1600, i + 1, 'I'), addressInt)
-        self._sdo_write(self.object_dict.NUMBER_OF_MAPPED_OBJECTS_IN_RXPDO_1, len(ppm_rx))
+        self._sdo_write(self.ADDRESS.NUMBER_OF_MAPPED_OBJECTS_IN_RXPDO_1, len(ppm_rx))
 
         # Assign tx map
-        self._sdo_write(self.object_dict.NUMBER_OF_MAPPED_OBJECTS_IN_TXPDO_1, 0)
+        self._sdo_write(self.ADDRESS.NUMBER_OF_MAPPED_OBJECTS_IN_TXPDO_1, 0)
         for i, addressInt in enumerate(tx_address_ints):
             self._sdo_write((0x1A00, i + 1, 'I'), addressInt)
-        self._sdo_write(self.object_dict.NUMBER_OF_MAPPED_OBJECTS_IN_TXPDO_1, len(ppm_tx))
+        self._sdo_write(self.ADDRESS.NUMBER_OF_MAPPED_OBJECTS_IN_TXPDO_1, len(ppm_tx))
 
         self.currentRxPDOMap = ppm_rx
         self.currentTxPDOMap = ppm_tx
 
         # Configure Digital Inputs (example)
-        self._sdo_write(self.object_dict.DIGITAL_INPUT_CONFIGURATION_DGIN_1, 255)
-        self._sdo_write(self.object_dict.DIGITAL_INPUT_CONFIGURATION_DGIN_2, 1)
-        self._sdo_write(self.object_dict.DIGITAL_INPUT_CONFIGURATION_DGIN_1, 0)
+        self._sdo_write(self.ADDRESS.DIGITAL_INPUT_CONFIGURATION_DGIN_1, 255)
+        self._sdo_write(self.ADDRESS.DIGITAL_INPUT_CONFIGURATION_DGIN_2, 1)
+        self._sdo_write(self.ADDRESS.DIGITAL_INPUT_CONFIGURATION_DGIN_1, 0)
 
         # Set the home offset move distance
         getLogger(__name__).debug(f"Configuring device {self} complete.")
@@ -265,21 +254,21 @@ class BrakeMotor(EPOS4Motor):
             #
         # Define the Process Data Objects for PPM (Rx and Tx)
         ppm_rx = [
-            self.object_dict.CONTROLWORD,
-            self.object_dict.TARGET_POSITION,
-            self.object_dict.PROFILE_ACCELERATION,
-            self.object_dict.PROFILE_DECELERATION,
-            self.object_dict.PROFILE_VELOCITY,
-            self.object_dict.MODES_OF_OPERATION,
-            self.object_dict.PHYSICAL_OUTPUTS
+            self.ADDRESS.CONTROLWORD,
+            self.ADDRESS.TARGET_POSITION,
+            self.ADDRESS.PROFILE_ACCELERATION,
+            self.ADDRESS.PROFILE_DECELERATION,
+            self.ADDRESS.PROFILE_VELOCITY,
+            self.ADDRESS.MODES_OF_OPERATION,
+            self.ADDRESS.PHYSICAL_OUTPUTS
         ]
         ppm_tx = [
-            self.object_dict.STATUSWORD,
-            self.object_dict.POSITION_ACTUAL_VALUE,
-            self.object_dict.VELOCITY_ACTUAL_VALUE,
-            self.object_dict.FOLLOWING_ERROR_ACTUAL_VALUE,
-            self.object_dict.MODES_OF_OPERATION_DISPLAY,
-            self.object_dict.DIGITAL_INPUTS
+            self.ADDRESS.STATUSWORD,
+            self.ADDRESS.POSITION_ACTUAL_VALUE,
+            self.ADDRESS.VELOCITY_ACTUAL_VALUE,
+            self.ADDRESS.FOLLOWING_ERROR_ACTUAL_VALUE,
+            self.ADDRESS.MODES_OF_OPERATION_DISPLAY,
+            self.ADDRESS.DIGITAL_INPUTS
         ]
 
         # Create rx and tx map integers
@@ -287,24 +276,24 @@ class BrakeMotor(EPOS4Motor):
         tx_address_ints = make_pdo_mapping(ppm_tx)
 
         # Assign rx map
-        self.sdo_write(self.object_dict.NUMBER_OF_MAPPED_OBJECTS_IN_RXPDO_1, 0)
+        self.sdo_write(self.ADDRESS.NUMBER_OF_MAPPED_OBJECTS_IN_RXPDO_1, 0)
         for i, addressInt in enumerate(rx_address_ints):
             self.sdo_write((0x1600, i + 1, 'I'), addressInt)
-        self.sdo_write(self.object_dict.NUMBER_OF_MAPPED_OBJECTS_IN_RXPDO_1, len(ppm_rx))
+        self.sdo_write(self.ADDRESS.NUMBER_OF_MAPPED_OBJECTS_IN_RXPDO_1, len(ppm_rx))
 
         # Assign tx map
-        self.sdo_write(self.object_dict.NUMBER_OF_MAPPED_OBJECTS_IN_TXPDO_1, 0)
+        self.sdo_write(self.ADDRESS.NUMBER_OF_MAPPED_OBJECTS_IN_TXPDO_1, 0)
         for i, addressInt in enumerate(tx_address_ints):
             self.sdo_write((0x1A00, i + 1, 'I'), addressInt)
-        self.sdo_write(self.object_dict.NUMBER_OF_MAPPED_OBJECTS_IN_TXPDO_1, len(ppm_tx))
+        self.sdo_write(self.ADDRESS.NUMBER_OF_MAPPED_OBJECTS_IN_TXPDO_1, len(ppm_tx))
 
         self.currentRxPDOMap = ppm_rx
         self.currentTxPDOMap = ppm_tx
 
         # Configure Digital Inputs (example)
-        self.sdo_write(self.object_dict.DIGITAL_INPUT_CONFIGURATION_DGIN_1, 255)
-        self.sdo_write(self.object_dict.DIGITAL_INPUT_CONFIGURATION_DGIN_2, 1)
-        self.sdo_write(self.object_dict.DIGITAL_INPUT_CONFIGURATION_DGIN_1, 0)
+        self.sdo_write(self.ADDRESS.DIGITAL_INPUT_CONFIGURATION_DGIN_1, 255)
+        self.sdo_write(self.ADDRESS.DIGITAL_INPUT_CONFIGURATION_DGIN_2, 1)
+        self.sdo_write(self.ADDRESS.DIGITAL_INPUT_CONFIGURATION_DGIN_1, 0)
 
 
 
