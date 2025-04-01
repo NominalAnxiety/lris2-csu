@@ -7,6 +7,7 @@ import zmq
 import threading
 import argparse
 import yaml
+import functools
 
 from cooethercat.helpers import StatuswordStates, HomingMethods
 from cooethercat import EPOS4Bus
@@ -34,7 +35,10 @@ class CSUHardware:
         # self.left_brake = BrakeMotor(self.configuration.left_brake)
         # self.left_brake = BrakeMotor(self.configuration.right_brake)
 
-        self.slave_types = defaultdict(lambda: BarMotor)
+        # TODO I'm not thrilled with implementing this via functools partial as it does require a better understanding
+        #  of python. Its probably clear enough that it can serve as a teaching moment if necessary
+        self.slave_types = {id: functools.partial(BarMotor, kwargs={'use_ssi_encoder':cfg.use_ssi})
+                            for id, cfg in self.configuration.bar_configs.items()}
 
         # Create the bus
         self.bus = EPOS4Bus(self.configuration.ethercat_device)
