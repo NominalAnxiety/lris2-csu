@@ -83,7 +83,7 @@ class CSUHardwareConfig:
 
         return ret
 
-    def compute_pos_width_dict(self, bar_positions: dict[int]) -> dict[int, tuple[float, float]]:
+    def compute_pos_width_dict(self, bar_positions: dict[int, int]) -> dict[int, tuple[float, float]]:
         """
         Inverse of compute_bar_count_positions
         """
@@ -510,12 +510,16 @@ class CSUHardware:
         for s in self.bus.slaves:
             s.halt()
 
-    def status(self):
+    def status(self)->dict:
+        ret = {}
         status = {id: (self.bus.slaves[bp.left.bus_id].debug_info_sdo,
                      self.bus.slaves[bp.right.bus_id].debug_info_sdo)
                 for id, bp in self.configuration.bar_pairs.items()}
         x = {b['node']: b['position'] for bp in status.values() for b in bp}
-        status['mask'] = self.configuration.compute_pos_width_dict(x)
+
+        ret['debug'] = status
+        ret['mask'] = self.configuration.compute_pos_width_dict(x)
+        return ret
 
     def terminate_control(self):
         self.bus.disable_pdo()
