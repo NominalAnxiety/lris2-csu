@@ -1,8 +1,9 @@
 daemon:
   name: "lris2csu"  # Name under which it subscribes and publishes
-  zmq:
-    command_address: "tcp://127.0.0.1:5555"  # Address/socket daemon subscribes to commands
-    publish_address: "tcp://127.0.0.1:5556"  # Address/socket daemon publishes updates to
+  mktl:
+    cmd_port: 5555
+    pub_port: 5557
+    registry: "tcp://127.0.0.1:7000"
 
 #1.563 mm/tooth
 #370:1 gear ratio

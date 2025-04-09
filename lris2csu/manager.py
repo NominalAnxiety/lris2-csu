@@ -1,9 +1,4 @@
-import json
-import pickle
-from dataclasses import dataclass
 from logging import getLogger
-from typing import Callable
-import zmq
 import threading
 import argparse
 import yaml
@@ -12,11 +7,10 @@ import functools
 from cooethercat.helpers import StatuswordStates, HomingMethods
 from cooethercat import EPOS4Bus
 
-from lris2csu.slit import MaskConfig, Slit
-from lris2csu.util import zpipe, setup_logging
+from lris2csu.slit import MaskConfig
+from lris2csu.util import setup_logging
 from lris2csu.hardware import BarMotor, BrakeMotor, CSUHardwareConfig
-from collections import defaultdict
-from lris2csu.comms import CommsFactory
+from mktl.mktlcoms import MKTLComs
 
 
 class CSUHardware:
@@ -82,7 +76,7 @@ class CSUHardware:
 
 
 class CSUServer:
-    def __init__(self, config='csu.yaml', connect=True):
+    def __init__(self, config='csu.yaml', start=True):
 
         # Load and parse the configuration YAML file
         try:
@@ -93,144 +87,33 @@ class CSUServer:
 
         self.csu = CSUHardware(self.configuration['hardware'])
 
+        name = self.configuration['daemon']['name']
         CSU_COMMANDS = {
-            'csu.configure': self.csu.configure,
-            'csu.abort': self.csu.halt,
-            'csu.reset': self.csu.reset_bus,
-            'csu.calibrate': self.csu.calibrate,
-            'csu.halt': self.csu.halt,
-            'csu.status': self.csu.status,
+            f'{name}.configure': self.csu.configure,
+            f'{name}.reset': self.csu.reset_bus,
+            f'{name}.calibrate': self.csu.calibrate,
+            f'{name}.status': self.csu.status,
+
+            f'{name}.abort': self.csu.halt,
+            f'{name}.halt': self.csu.halt,
+            f'{name}.stop': self.csu.halt,
         }
 
-        SERVER_COMMANDS = {'csu.exit': self.shutdown}
-
-        self.comms = CommsFactory(self.configuration, suppoted_commands=SERVER_COMMANDS+CSU_COMMANDS)
-
-        # if check_active_jupyter_notebook():
-        #     raise RuntimeError('Jupyter notebooks are running, shut them down first.')
+        self.comms = MKTLComs(identity=name, authoritative_keys=CSU_COMMANDS,
+                              registry_addr=self.configuration['daemon']['mktl']['registry'],
+                              shutdown_callback=self.shutdown)
+        cmd_port = self.configuration['daemon']['mktl']['cmd_port']
+        pub_port = self.configuration['daemon']['mktl']['pub_port']
+        self.comms.bind(f'tcp://0.0.0.0:{cmd_port}')
+        self.comms.bind_pub(f'tcp://0.0.0.0:{pub_port}')
+        if start:
+            self.comms.start()
 
     def shutdown(self):
         getLogger(__name__).info('Shutting down')
         self.csu.terminate_control()
-        self.comms.shutdown()
+        self.comms.stop()
         exit(0)
-
-    def run(self):
-
-        getLogger(__name__).info(f'Accepting commands on {self.comms.command_address}')
-
-        try:
-            for message in self.comms.listen():
-
-                getLogger(__name__).debug(f'Received: {message}')
-                try:
-                    message.respond(message.command(*message.args, **message.kwargs))
-                except Exception as e:
-                    message.respond(e, error=True)
-        except zmq.ZMQError as e:
-            getLogger(__name__).error(f'Caught {e}, aborting and shutting down')
-        except KeyboardInterrupt:
-            getLogger(__name__).error(f'Keyboard Interrupt, aborting and shutting down')
-
-        self.csu.terminate_control()
-        self.comms.shutdown()
-
-
-    # def begin_slit_control(self, start=True, daemon=False, context: zmq.Context = None):
-    #     if self._control_thread is not None:
-    #         raise RuntimeError('Slit control mut be terminated and joined join')
-    #
-    #     self._cap_pipe, self._cap_pipe_thread = zpipe(context or zmq.Context.instance())
-    #     self._control_thread = threading.Thread(name='CSU Slit Control Thread',
-    #                                             target=self._slit_controller, args=(self._cap_pipe_thread,),
-    #                                             kwargs={'context': context}, daemon=daemon)
-    #     if start:
-    #         self._control_thread.start()
-    #
-    #     return self._control_thread
-    #
-    # def terminate_slit_control(self, join: float|bool =True):
-    #     if self._control_thread is None:
-    #         return
-    #
-    #     if not self._control_thread.is_alive():
-    #         self._control_thread=None
-    #         try:
-    #             self._cap_pipe.close()
-    #         except:
-    #             pass
-    #         return
-    #
-    #     if self._cap_pipe:
-    #         self._cap_pipe.send_pyobj(('exit', None))
-    #         self._cap_pipe.close()
-    #
-    #     if join:
-    #         self._control_thread.join(timeout=None if isinstance(join, bool) else join)
-    #         if self._control_thread.is_alive():
-    #             raise RuntimeError(f'{self._control_thread.name} did not terminate within {join}')
-    #
-    #         self._control_thread = None
-    #
-    # def __del__(self):
-    #     try:
-    #         self.terminate_slit_control(join=True)
-    #         self._cap_pipe_thread.close()  #should have been closed by the other thread
-    #     except:
-    #         pass
-    #
-    #
-    # def _slit_controller(self, pipe: zmq.Socket, context: zmq.Context = None):
-    #     """
-    #     Args:
-    #         pipe: a pipe for receiving commands
-    #         context: zmq.Context
-    #
-    #     Returns: None
-    #
-    #     """
-    #     context = context or zmq.Context().instance()
-    #     self.reset_bus()
-    #
-    #     getLogger(__name__).info('CSU control thread started')
-    #     while True:
-    #
-    #         cmd, data = '', ''
-    #         try:
-    #             cmd, data = pipe.recv_pyobj(zmq.NOBLOCK)
-    #         except zmq.ZMQError as e:
-    #             if e.errno != zmq.EAGAIN:
-    #                 self._abort(reason='End of command pipe')
-    #                 if e.errno == zmq.ETERM:
-    #                     break
-    #                 else:
-    #                     raise e  # real error
-    #
-    #         match cmd:
-    #             case 'exit':
-    #                 self._abort(reason='Exit command', join=True)
-    #                 break
-    #             case 'abort':
-    #                 self._abort(reason='Abort command')
-    #             case 'configure':
-    #                 # Build Slit() out of the required slit bars and configure the system
-    #                 self._configure(data)
-    #             case _:
-    #                 getLogger(__name__).error(f'Received invalid command "{cmd}", ignoring')
-    #
-    #     getLogger(__name__).info('CSU control thread exiting')
-    #
-    # def abort(self):
-    #     if self._cap_pipe:
-    #         self._cap_pipe.send_pyobj(('abort', id))
-    #     else:
-    #         raise RuntimeError('No pipe to worker')
-    #
-    # def configure(self, mask_config: MaskConfig):
-    #     if self._cap_pipe:
-    #         self._cap_pipe.send_pyobj(('configure', mask_config))
-    #     else:
-    #         raise RuntimeError('No pipe to worker')
 
 
 def parse_cl():
@@ -254,9 +137,7 @@ if __name__ == '__main__':
     args = parse_cl()
     setup_logging('csuserver')
 
-    # if check_active_jupyter_notebook():
-    #     raise RuntimeError('Jupyter notebooks are running, shut them down first.')
-
-    args = parse_cl()
-
-    CSUServer(config=args.config_yaml).run()
+    app = CSUServer(config=args.config_yaml, start=True)
+    print("CSU Server running on tcp://*:5570")
+    while True:
+        threading.Event().wait(60)
