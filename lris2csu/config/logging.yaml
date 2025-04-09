@@ -4,6 +4,7 @@ loggers:
     pysoem: DEBUG
     lris2csu: DEBUG
     lris2csu.util: INFO
+    mktl: DEBUG
     "":
       handlers: [ default ]
       level: WARNING

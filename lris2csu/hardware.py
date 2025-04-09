@@ -2,9 +2,12 @@ from dataclasses import dataclass
 from logging import getLogger
 import yaml
 from typing import NamedTuple
+import functools
 
 from cooethercat import EPOS4Motor
-from cooethercat.helpers import make_pdo_mapping, EPOS4Obj
+from cooethercat.helpers import make_pdo_mapping, EPOS4Obj, StatuswordStates, HomingMethods
+from cooethercat import EPOS4Bus
+from lris2csu.slit import MaskConfig
 
 
 class CSUHardwareConfig:
@@ -78,6 +81,25 @@ class CSUHardwareConfig:
             ret[bar_pair.left.bus_id] = int(round(left_count))
             ret[bar_pair.right.bus_id] = int(round(right_count))
 
+        return ret
+
+    def compute_pos_width_dict(self, bar_positions: dict[int]) -> dict[int, tuple[float, float]]:
+        """
+        Inverse of compute_bar_count_positions
+        """
+        ret = {}
+        for id, pair in self.bar_pairs.items():
+            try:
+                left_mm = bar_positions[pair.left.bus_id]*pair.left.um_per_count/1000
+                right_travel_mm = bar_positions[pair.right.bus_id]*pair.right.um_per_count/1000
+            except KeyError:
+                continue
+            right_mm =-(right_travel_mm -self.opening_width_mm+ pair.right.offset_mm)
+            left_edge = left_mm + pair.left.offset_mm  # left edge
+            right_edge = right_mm  # right edge
+            width = right_edge - left_edge
+            position = (left_edge+right_edge)/2
+            ret[id] = (position, width)
         return ret
 
 # Register the representer and constructor with PyYAML
@@ -427,59 +449,75 @@ class BarMotor(EPOS4Motor):
 
 
 class BrakeMotor(EPOS4Motor):
+    def __init__(self, *args, **kwargws):
+        raise NotImplementedError
+
     def engage(self):
         raise NotImplementedError
 
     def disengage(self):
         raise NotImplementedError
 
-    def config_func(self, bus_id):
-        getLogger(__name__).debug(f"Configuring BrakeMotor device {self} via "
-                                  f"config_func (EPOS4 Micro 24/5) at bus node {self.node}")
-        assert bus_id == self.node
-            #
-        # Define the Process Data Objects for PPM (Rx and Tx)
-        ppm_rx = [
-            self.ADDRESS.CONTROLWORD,
-            self.ADDRESS.TARGET_POSITION,
-            self.ADDRESS.PROFILE_ACCELERATION,
-            self.ADDRESS.PROFILE_DECELERATION,
-            self.ADDRESS.PROFILE_VELOCITY,
-            self.ADDRESS.MODES_OF_OPERATION,
-            self.ADDRESS.PHYSICAL_OUTPUTS
-        ]
-        ppm_tx = [
-            self.ADDRESS.STATUSWORD,
-            self.ADDRESS.POSITION_ACTUAL_VALUE,
-            self.ADDRESS.VELOCITY_ACTUAL_VALUE,
-            self.ADDRESS.FOLLOWING_ERROR_ACTUAL_VALUE,
-            self.ADDRESS.MODES_OF_OPERATION_DISPLAY,
-            self.ADDRESS.DIGITAL_INPUTS
-        ]
 
-        # Create rx and tx map integers
-        rx_address_ints = make_pdo_mapping(ppm_rx)
-        tx_address_ints = make_pdo_mapping(ppm_tx)
+class CSUHardware:
+    def __init__(self, config:CSUHardwareConfig|str='csu.yaml', connect=False):
 
-        # Assign rx map
-        self.sdo_write(self.ADDRESS.NUMBER_OF_MAPPED_OBJECTS_IN_RXPDO_1, 0)
-        for i, addressInt in enumerate(rx_address_ints):
-            self.sdo_write((0x1600, i + 1, 'I'), addressInt)
-        self.sdo_write(self.ADDRESS.NUMBER_OF_MAPPED_OBJECTS_IN_RXPDO_1, len(ppm_rx))
+        if not isinstance(config, CSUHardwareConfig):
+            # Load and parse the configuration YAML file
+            try:
+                with open(config, 'r') as f:
+                    config: dict = yaml.full_load(config)['hardware']
+            except Exception as e:
+                raise ValueError(f"Failed to load configuration file '{config}': {e}")
 
-        # Assign tx map
-        self.sdo_write(self.ADDRESS.NUMBER_OF_MAPPED_OBJECTS_IN_TXPDO_1, 0)
-        for i, addressInt in enumerate(tx_address_ints):
-            self.sdo_write((0x1A00, i + 1, 'I'), addressInt)
-        self.sdo_write(self.ADDRESS.NUMBER_OF_MAPPED_OBJECTS_IN_TXPDO_1, len(ppm_tx))
+        self.configuration :CSUHardwareConfig = config
 
-        self.currentRxPDOMap = ppm_rx
-        self.currentTxPDOMap = ppm_tx
+        # self.left_brake = BrakeMotor(self.configuration.left_brake)
+        # self.left_brake = BrakeMotor(self.configuration.right_brake)
 
-        # Configure Digital Inputs (example)
-        self.sdo_write(self.ADDRESS.DIGITAL_INPUT_CONFIGURATION_DGIN_1, 255)
-        self.sdo_write(self.ADDRESS.DIGITAL_INPUT_CONFIGURATION_DGIN_2, 1)
-        self.sdo_write(self.ADDRESS.DIGITAL_INPUT_CONFIGURATION_DGIN_1, 0)
+        # TODO I'm not thrilled with implementing this via functools partial as it does require a better understanding
+        #  of python. Its probably clear enough that it can serve as a teaching moment if necessary
+        self.slave_types = {id: functools.partial(BarMotor, kwargs={'use_ssi_encoder':cfg.use_ssi})
+                            for id, cfg in self.configuration.bar_configs.items()}
 
+        # Create the bus
+        self.bus = EPOS4Bus(self.configuration.ethercat_device)
+        if connect:
+            self.reset_bus()
 
+    def reset_bus(self):
+        self.bus.initialize(self.slave_types)
+
+    def calibrate(self):
+        self.bus.disable_pdo()
+        for s in self.bus.slaves:
+            if self.configuration.bar_by_dev_id(s.node).reversed:
+                method = HomingMethods.CURRENT_THRESHOLD_POS_SPEED_AND_INDEX
+            else:
+                method = HomingMethods.CURRENT_THRESHOLD_NEG_SPEED_AND_INDEX
+            s.home_via_method(method, current_threshold=350, monitor=None, timeout=30, setup_only=True)
+        self.bus.enable_pdo()
+        self.bus.execute_homing()
+
+    def configure(self, mask_config:MaskConfig, speed=8000):
+        bar_pos = self.configuration.compute_bar_count_positions(mask_config.to_dict())
+        self.bus.enable_pdo()
+        self.bus.move_to(bar_pos, blocking=True, speed=speed)
+        self.bus.disable_pdo()
+
+    def halt(self):
+        self.bus.disable_pdo()
+        for s in self.bus.slaves:
+            s.halt()
+
+    def status(self):
+        status = {id: (self.bus.slaves[bp.left.bus_id].debug_info_sdo,
+                     self.bus.slaves[bp.right.bus_id].debug_info_sdo)
+                for id, bp in self.configuration.bar_pairs.items()}
+        x = {b['node']: b['position'] for bp in status.values() for b in bp}
+        status['mask'] = self.configuration.compute_pos_width_dict(x)
+
+    def terminate_control(self):
+        self.bus.disable_pdo()
+        self.bus.close()
 

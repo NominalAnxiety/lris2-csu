@@ -3,7 +3,7 @@ daemon:
   mktl:
     cmd_port: 5555
     pub_port: 5557
-    registry: "tcp://127.0.0.1:7000"
+    registry: "tcp://127.0.0.1:5570"
 
 #1.563 mm/tooth
 #370:1 gear ratio
