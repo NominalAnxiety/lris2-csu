@@ -21,25 +21,26 @@ class CSURemote:
         self.csu_address = csu_address
         if not self.csu_address and not registry_address:
             raise ValueError("Either csu_address or registry_address must be specified.")
-        self.coms = MKTLComs(registry_address)
+        self.coms = MKTLComs(registry_addr=registry_address)
 
         if start_comms:
             self.coms.start()
 
     def configure(self, mask_config:MaskConfig, speed=8000):
-        self.coms.set('lris2csu.configure', dict(value=mask_config, speed=speed), destination=self.csu_address)
+        self.coms.set('lris2csu.configure', dict(args=(mask_config,), kwargs={'speed':speed}),
+                      destination=self.csu_address)
 
     def reset(self):
-        self.coms.set('lris2csu.reset', True, destination=self.csu_address)
+        self.coms.set('lris2csu.reset', dict(args=tuple()), destination=self.csu_address)
 
     def calibrate(self):
-        self.coms.set('lris2csu.calibrate', True, destination=self.csu_address)
+        self.coms.set('lris2csu.calibrate', dict(args=tuple()), destination=self.csu_address)
 
     def shutdown(self):
-        self.coms.set('lris2csu.mktl_control', dict(shutdown=True), destination=self.csu_address)
+        self.coms.set('lris2csu.mktl_control', dict(args=tuple()), destination=self.csu_address)
 
     def status(self):
         return self.coms.get('lris2csu.status')
 
     def stop(self):
-        self.coms.set('lris2csu.stop', True, destination=self.csu_address)
+        self.coms.set('lris2csu.stop', dict(args=tuple()), destination=self.csu_address)

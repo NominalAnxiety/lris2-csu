@@ -7,7 +7,7 @@ import functools
 from lris2csu.util import setup_logging
 from lris2csu.hardware import CSUHardware
 
-from mktl.mktlcoms import MKTLComs
+from mktl.mktlcoms import MKTLComs, MKTLMessage
 
 
 class CSUDummyHardware:
@@ -39,14 +39,14 @@ class CSUServer:
 
         name = self.configuration['daemon']['name']
         CSU_COMMANDS = {
-            f'{name}.configure': self.csu.configure,
-            f'{name}.reset': self.csu.reset_bus,
-            f'{name}.calibrate': self.csu.calibrate,
-            f'{name}.status': self.csu.status,
+            f'{name}.configure': self.handler,
+            f'{name}.reset': self.handler,
+            f'{name}.calibrate': self.handler,
+            f'{name}.status': self.handler,
 
-            f'{name}.abort': self.csu.halt,
-            f'{name}.halt': self.csu.halt,
-            f'{name}.stop': self.csu.halt,
+            f'{name}.abort': self.handler,
+            f'{name}.halt': self.handler,
+            f'{name}.stop': self.handler,
         }
 
         self.comms = MKTLComs(identity=name, authoritative_keys=CSU_COMMANDS,
@@ -64,6 +64,35 @@ class CSUServer:
         self.csu.terminate_control()
         self.comms.stop()
         exit(0)
+
+    def handler(self, m:MKTLMessage):
+        method = m.msg_type
+        context = m.json_data
+        key = m.key
+
+        if method =='get' and key.split('.')[1] in ('status',):
+            m.fail('set unsupported')
+
+        if method =='set' and key.split('.')[1] in ('configure', 'reset', 'calibrate', 'abort', 'halt', 'stop'):
+            m.fail('set unsupported')
+
+        args = context.get('args', [])
+        kwargs = context.get('kwargs', {})
+        resp = 'OK'
+        try:
+            if 'configure' in key:
+                self.csu.configure(*args, **kwargs)
+            if 'reset' in key:
+                self.csu.reset_bus()
+            if 'calibrate' in key:
+                self.csu.calibrate()
+            if 'status' in key:
+                resp = self.csu.status()
+            if 'abort' in key or 'halt' in key or 'stop' in key:
+                self.csu.halt()
+        except Exception as e:
+            m.fail(str(e))
+        m.respond(resp)
 
 
 def parse_cl():
