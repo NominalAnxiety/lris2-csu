@@ -73,6 +73,7 @@ class CSUServer:
         method = m.msg_type
         context = m.json_data
         key = m.key
+        m.ack()
 
         if method =='get' and key.split('.')[1] not in ('status',):
             m.fail('get unsupported')
@@ -95,7 +96,10 @@ class CSUServer:
                 resp = self.csu.status(**kwargs)
             if 'abort' in key or 'halt' in key or 'stop' in key:
                 self.csu.halt()
+            if 'clear_faults' in key:
+                self.csu.clear_faults()
         except Exception as e:
+            getLogger(__name__).exception(f"Exception in {key}: {e}", exc_info=True)
             m.fail(str(e))
         m.respond(resp)
 

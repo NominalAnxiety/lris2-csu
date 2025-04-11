@@ -32,4 +32,4 @@ class MaskConfig:
 
     @classmethod
     def from_dict(cls,d):
-        return cls(tuple([Slit(i, pos, wid) for i, (pos, wid) in d.items()]))
+        return cls(tuple([Slit(int(i), pos, wid) for i, (pos, wid) in d.items()]))

@@ -246,8 +246,8 @@ class BarMotor(EPOS4Motor):
     DUAL_LOOP_PID_PARAMS = CSU_PID_CONFIG(0,0,0,0,0,0,0,0,0,0,0)  #TODO
     SINGLE_LOOP_PID_PARAMS = CSU_PID_CONFIG(0,0,0,0,0,0,0,0,0,0,0)  #TODO
 
-    def __init__(self, *args, use_ssi_encoder=False, **kwargws):
-        super().__init__(*args, **kwargws)
+    def __init__(self, *args, use_ssi_encoder=False, **kwargs):
+        super().__init__(*args)
         self.use_ssi_encoder = use_ssi_encoder
 
     def config_func(self, node_id):
@@ -522,6 +522,10 @@ class CSUHardware:
         ret['status'] = status
         ret['mask'] = self.configuration.compute_pos_width_dict(x)
         return ret
+
+    def clear_faults(self):
+        for s in self.bus.slaves:
+            s.clear_faults()
 
     def terminate_control(self):
         self.bus.disable_pdo()

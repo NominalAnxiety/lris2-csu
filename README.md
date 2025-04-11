@@ -43,7 +43,10 @@ Take a look at `lris2-csu/examples/demo.py` for local ipython commanding.
 Take a look at Take a look at lris2-csu/examples/mktl_play.py for remote control via "mktl" commanding. Note that this would need spinning up:
 - Three Terminals:
   - `conda run -n lris2csu python ~/src/mKTL/mktl/registry.py`
-  - `sudo /home/l2dev/miniconda3/bin/conda run -n lris2csu python ~/src/lris2-csu/lris2-csu/manager.py --eth <i.e. eno1> --cfg ~/src/lris2-csu/lris2-csu/config/csu.yaml`
+  - `sudo /home/l2dev/miniconda3/bin/conda run -n lris2csu python ~/src/lris2-csu/lris2csu/manager.py --eth <i.e. eno1> --cfg ~/src/lris2-csu/lris2csu/config/csu.yaml`
   - `conda run -n lris2csu python ~/src/mKTL/mktl/registry.py`
 - Command Terminal
   - Start up ipython somewhere and instantiate `lris2-csu.remote.CSURemote()`
+
+
+/Users/jibailey/src/lris2-csu/lris2csu/manager.py

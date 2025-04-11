@@ -44,3 +44,6 @@ class CSURemote:
 
     def stop(self):
         self.coms.set('lris2csu.stop', dict(args=tuple()), destination=self.csu_address)
+
+    def clear_faults(self):
+        self.coms.set('lris2csu.clear_faults', dict(args=tuple()), destination=self.csu_address)
