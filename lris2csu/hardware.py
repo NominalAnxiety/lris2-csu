@@ -301,7 +301,7 @@ class BarMotor(EPOS4Motor):
         # Set the home offset move distance
         getLogger(__name__).debug(f"Configuring device {self} complete.")
 
-        self.config_drive(enable_magnetic_tape=self.use_ssi_encoder)
+        # self.config_drive(enable_magnetic_tape=self.use_ssi_encoder)
 
     def config_drive(self, enable_magnetic_tape=False, motor_configuration=CSU_ECmax16_283828_config(),
                         gear_configuration=CSU_planetary_gearhead_GP16A_138342_config(),
@@ -487,6 +487,7 @@ class CSUHardware:
 
     def reset_bus(self):
         self.bus.initialize(self.slave_types)
+        #TODO check for all slaves present
 
     def calibrate(self):
         self.bus.disable_pdo()

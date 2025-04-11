@@ -154,7 +154,7 @@ hardware: !CSUHardwareConfig
         um_per_count: 0.03942899
         reversed: True
         offset_mm: 18.48
-        use_ssi_encoder: True
+        use_ssi_encoder: False
       right: !BarConfig
         bus_id: 12
         torque_limit: 2.0
@@ -162,7 +162,7 @@ hardware: !CSUHardwareConfig
         um_per_count: 0.03942899
         reversed: False
         offset_mm: 0
-        use_ssi_encoder: True
+        use_ssi_encoder: False
     - !BarPairConfig
       id: 4
       left: !BarConfig
@@ -172,7 +172,7 @@ hardware: !CSUHardwareConfig
         um_per_count: 0.03942899
         reversed: True
         offset_mm: 10.32
-        use_ssi_encoder: True
+        use_ssi_encoder: False
       right: !BarConfig
         bus_id: 13
         torque_limit: 2.0
@@ -180,7 +180,7 @@ hardware: !CSUHardwareConfig
         um_per_count: 0.03942899
         reversed: False
         offset_mm: 8.16
-        use_ssi_encoder: True
+        use_ssi_encoder: False
     - !BarPairConfig
       id: 3
       left: !BarConfig
@@ -190,7 +190,7 @@ hardware: !CSUHardwareConfig
         um_per_count: 0.03942899
         reversed: True
         offset_mm: 18.48
-        use_ssi_encoder: True
+        use_ssi_encoder: False
       right: !BarConfig
         bus_id: 14
         torque_limit: 2.0
@@ -198,7 +198,7 @@ hardware: !CSUHardwareConfig
         um_per_count: 0.03942899
         reversed: False
         offset_mm: 0
-        use_ssi_encoder: True
+        use_ssi_encoder: False
     - !BarPairConfig
       id: 2
       left: !BarConfig
