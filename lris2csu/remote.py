@@ -39,8 +39,8 @@ class CSURemote:
     def shutdown(self):
         self.coms.set('lris2csu.mktl_control', dict(args=tuple()), destination=self.csu_address)
 
-    def status(self):
-        return self.coms.get('lris2csu.status')
+    def status(self, verbose=False):
+        return self.coms.get('lris2csu.status', dict(args=tuple(), kwargs={'verbose':verbose}))
 
     def stop(self):
         self.coms.set('lris2csu.stop', dict(args=tuple()), destination=self.csu_address)

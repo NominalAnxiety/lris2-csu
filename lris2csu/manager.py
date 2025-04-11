@@ -92,7 +92,7 @@ class CSUServer:
             if 'calibrate' in key:
                 self.csu.calibrate()
             if 'status' in key:
-                resp = self.csu.status()
+                resp = self.csu.status(**kwargs)
             if 'abort' in key or 'halt' in key or 'stop' in key:
                 self.csu.halt()
         except Exception as e:

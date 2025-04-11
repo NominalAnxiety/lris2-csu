@@ -510,14 +510,15 @@ class CSUHardware:
         for s in self.bus.slaves:
             s.halt()
 
-    def status(self)->dict:
+    def status(self, verbose:bool=False)->dict:
         ret = {}
-        status = {id: (self.bus.slaves[bp.left.bus_id].debug_info_sdo,
-                     self.bus.slaves[bp.right.bus_id].debug_info_sdo)
+        status_func = 'debug_info_sdo' if verbose else 'info_sdo'
+        status = {id: (getattr(self.bus.slaves[bp.left.bus_id], status_func),
+                       getattr(self.bus.slaves[bp.right.bus_id], status_func))
                 for id, bp in self.configuration.bar_pairs.items()}
         x = {b['node']: b['position'] for bp in status.values() for b in bp}
 
-        ret['debug'] = status
+        ret['status'] = status
         ret['mask'] = self.configuration.compute_pos_width_dict(x)
         return ret
 
