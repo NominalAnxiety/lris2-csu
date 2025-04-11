@@ -49,6 +49,7 @@ class CSUServer:
             f'{name}.abort': self.handler,
             f'{name}.halt': self.handler,
             f'{name}.stop': self.handler,
+            f'{name}.clear_faults': self.handler,
         }
 
         self.comms = MKTLComs(identity=name, authoritative_keys=CSU_COMMANDS,
@@ -62,6 +63,7 @@ class CSUServer:
         self.comms.bind_pub(f'tcp://{ip}:{pub_port}')
         if start:
             self.comms.start()
+            self.csu.reset_bus()
 
     def shutdown(self):
         getLogger(__name__).info('Shutting down')
@@ -78,7 +80,7 @@ class CSUServer:
         if method =='get' and key.split('.')[1] not in ('status',):
             m.fail('get unsupported')
 
-        if method =='set' and key.split('.')[1] not in ('configure', 'reset', 'calibrate', 'abort', 'halt', 'stop'):
+        if method =='set' and key.split('.')[1] not in ('configure', 'reset', 'calibrate', 'abort', 'halt', 'stop', 'clear_faults'):
             m.fail('set unsupported')
 
         args = context.get('args', [])

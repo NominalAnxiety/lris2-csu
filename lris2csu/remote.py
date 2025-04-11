@@ -33,7 +33,7 @@ class CSURemote:
     def reset(self):
         self.coms.set('lris2csu.reset', dict(args=tuple()), destination=self.csu_address)
 
-    def calibrate(self, one_at_a_time=False):
+    def calibrate(self, one_at_a_time=True):
         self.coms.set('lris2csu.calibrate', dict(args=tuple(), kwargs={'one_at_a_time':one_at_a_time}),
                       destination=self.csu_address)
 

@@ -498,11 +498,13 @@ class CSUHardware:
                 method = HomingMethods.CURRENT_THRESHOLD_POS_SPEED_AND_INDEX
             else:
                 method = HomingMethods.CURRENT_THRESHOLD_NEG_SPEED_AND_INDEX
-            s.home_via_method(method, current_threshold=350, monitor=None, timeout=30, setup_only=not one_at_a_time)
+            s.home_via_method(method, current_threshold=450, monitor=None, timeout=30, setup_only=not one_at_a_time)
+            time.sleep(.2)
 
         if not one_at_a_time:
             time.sleep(.5)
             self.bus.enable_pdo()
+            time.sleep(.5)
             self.bus.execute_homing()
 
     def configure(self, mask_config:MaskConfig, speed=8000):
