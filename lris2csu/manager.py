@@ -70,10 +70,10 @@ class CSUServer:
         context = m.json_data
         key = m.key
 
-        if method =='get' and key.split('.')[1] in ('status',):
-            m.fail('set unsupported')
+        if method =='get' and key.split('.')[1] not in ('status',):
+            m.fail('get unsupported')
 
-        if method =='set' and key.split('.')[1] in ('configure', 'reset', 'calibrate', 'abort', 'halt', 'stop'):
+        if method =='set' and key.split('.')[1] not in ('configure', 'reset', 'calibrate', 'abort', 'halt', 'stop'):
             m.fail('set unsupported')
 
         args = context.get('args', [])
@@ -119,6 +119,6 @@ if __name__ == '__main__':
     setup_logging('csuserver')
 
     app = CSUServer(config=args.config_yaml, start=True, dummynode=args.dummy_mode)
-    print("CSU Server running on tcp://*:5570")
+    getLogger(__name__).info("CSU Server running on tcp://*:5570")
     while True:
         threading.Event().wait(60)
