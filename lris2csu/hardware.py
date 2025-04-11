@@ -42,7 +42,7 @@ class CSUHardwareConfig:
         return {b.bus_id: b for bp in self.bar_pairs.values() for b in (bp.left, bp.right)}
 
     def bar_by_dev_id(self, id):
-        return self.bar_configs()[id]
+        return self.bar_configs[id]
 
     def compute_bar_count_positions(self, pos_width_dict: dict[int, tuple[float, float]]) -> dict[int]:
         """
@@ -477,7 +477,7 @@ class CSUHardware:
 
         # TODO I'm not thrilled with implementing this via functools partial as it does require a better understanding
         #  of python. Its probably clear enough that it can serve as a teaching moment if necessary
-        self.slave_types = {id: functools.partial(BarMotor, kwargs={'use_ssi_encoder':cfg.use_ssi})
+        self.slave_types = {id: functools.partial(BarMotor, kwargs={'use_ssi_encoder':cfg.use_ssi_encoder})
                             for id, cfg in self.configuration.bar_configs.items()}
 
         # Create the bus
