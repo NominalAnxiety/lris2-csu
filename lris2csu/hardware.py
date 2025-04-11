@@ -3,6 +3,7 @@ from logging import getLogger
 import yaml
 from typing import NamedTuple
 import functools
+import time
 
 from cooethercat import EPOS4Motor
 from cooethercat.helpers import make_pdo_mapping, EPOS4Obj, StatuswordStates, HomingMethods
@@ -489,16 +490,20 @@ class CSUHardware:
         self.bus.initialize(self.slave_types)
         #TODO check for all slaves present
 
-    def calibrate(self):
+    def calibrate(self, one_at_a_time=False):
         self.bus.disable_pdo()
+        time.sleep(.5)
         for s in self.bus.slaves:
             if self.configuration.bar_by_dev_id(s.node).reversed:
                 method = HomingMethods.CURRENT_THRESHOLD_POS_SPEED_AND_INDEX
             else:
                 method = HomingMethods.CURRENT_THRESHOLD_NEG_SPEED_AND_INDEX
-            s.home_via_method(method, current_threshold=350, monitor=None, timeout=30, setup_only=True)
-        self.bus.enable_pdo()
-        self.bus.execute_homing()
+            s.home_via_method(method, current_threshold=350, monitor=None, timeout=30, setup_only=not one_at_a_time)
+
+        if not one_at_a_time:
+            time.sleep(.5)
+            self.bus.enable_pdo()
+            self.bus.execute_homing()
 
     def configure(self, mask_config:MaskConfig, speed=8000):
         bar_pos = self.configuration.compute_bar_count_positions(mask_config.to_dict())
@@ -514,11 +519,18 @@ class CSUHardware:
     def status(self, verbose:bool=False)->dict:
         ret = {}
         status_func = 'debug_info_sdo' if verbose else 'info_sdo'
-        status = {id: (getattr(self.bus.slaves[bp.left.bus_id], status_func),
-                       getattr(self.bus.slaves[bp.right.bus_id], status_func))
+        status = {id: [getattr(self.bus.slaves[bp.left.bus_id], status_func),
+                       getattr(self.bus.slaves[bp.right.bus_id], status_func)]
                 for id, bp in self.configuration.bar_pairs.items()}
         x = {b['node']: b['position'] for bp in status.values() for b in bp}
-
+        for k in status:
+            status[k][0]['error_code'] = repr(status[k][0]['error_code'])
+            status[k][1]['error_code'] = repr(status[k][1]['error_code'])
+            try:
+                status[k][0]['statusword'] = repr(status[k][0]['statusword'])
+                status[k][1]['statusword'] = repr(status[k][1]['statusword'])
+            except KeyError:
+                pass
         ret['status'] = status
         ret['mask'] = self.configuration.compute_pos_width_dict(x)
         return ret

@@ -91,7 +91,7 @@ class CSUServer:
             if 'reset' in key:
                 self.csu.reset_bus()
             if 'calibrate' in key:
-                self.csu.calibrate()
+                self.csu.calibrate(**kwargs)
             if 'status' in key:
                 resp = self.csu.status(**kwargs)
             if 'abort' in key or 'halt' in key or 'stop' in key:
