@@ -27,7 +27,7 @@ class CSURemote:
             self.coms.start()
 
     def configure(self, mask_config:MaskConfig, speed=8000):
-        self.coms.set('lris2csu.configure', dict(args=(mask_config,), kwargs={'speed':speed}),
+        self.coms.set('lris2csu.configure', dict(args=(mask_config.to_dict(),), kwargs={'speed':speed}),
                       destination=self.csu_address)
 
     def reset(self):

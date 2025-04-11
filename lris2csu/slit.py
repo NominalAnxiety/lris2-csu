@@ -29,3 +29,7 @@ class MaskConfig:
 
     def to_dict(self):
         return {s.id: (s.x, s.width) for s in self.slits}
+
+    @classmethod
+    def from_dict(cls,d):
+        return cls(tuple([Slit(i, pos, wid) for i, (pos, wid) in d.items()]))

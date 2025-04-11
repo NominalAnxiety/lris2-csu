@@ -5,7 +5,7 @@ import yaml
 import functools
 
 from lris2csu.util import setup_logging
-from lris2csu.hardware import CSUHardware
+from lris2csu.hardware import CSUHardware, MaskConfig
 
 from mktl.mktlcoms import MKTLComs, MKTLMessage
 
@@ -81,7 +81,8 @@ class CSUServer:
         resp = 'OK'
         try:
             if 'configure' in key:
-                self.csu.configure(*args, **kwargs)
+                mask = MaskConfig.from_dict(args[0])
+                self.csu.configure(mask, **kwargs)
             if 'reset' in key:
                 self.csu.reset_bus()
             if 'calibrate' in key:
