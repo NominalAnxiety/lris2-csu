@@ -1,0 +1,22 @@
+name: lris2csu
+channels:
+  - conda-forge
+  - https://repo.anaconda.com/pkgs/main
+  - https://repo.anaconda.com/pkgs/r
+dependencies:
+  - astropy
+  - ipython
+  - json5
+  - jupyter
+  - jupyterlab
+  - matplotlib
+  - pandas
+  - python=3.12
+  - pyzmq=26.4.
+  - scipy
+#  - pip:
+#      - cooethercat==0.1.0
+#      - lris2csu==0.1.0
+#      - mktl==0.1.0
+#      - pysoem==1.1.10
+prefix: /home/l2dev/miniconda3/envs/lris2csu

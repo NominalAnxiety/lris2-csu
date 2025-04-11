@@ -1,15 +1,25 @@
 # lris2csu
-A demo package for the LRIS2 Configurable Slit Unit
-
-## Table of Contents
-
-1. Installation
-2. Installing Dependencies
-
+A demo package for the LRIS2 Configurable Slit Unit, showcasing remote client objects, hardware servers, 
+zmq communication (with support for mKTL developments). 
 
 ## Installation
+#Install miniconda
 
-To install the package in editable mode (ideal for development), follow these steps:
+
+mkdir ~/src  #or wherever
+cd ~/src  #or wherever
+
+git clone https://github.com/CaltechOpticalObservatories/lris2-csu.git
+git clone https://github.com/CaltechOpticalObservatories/coo-ethercat.git
+git clone -b develop https://github.com/baileyji/mKTL.git mktl
+cd lris2-csu
+conda env create -f environment.yml
+conda activate lris2csu
+pip install pysoem
+pip install -e ./coo-ethercat
+pip install -e ./mktl
+pip install -e ./lris2-csu
+
 
 ### Requirements
 
@@ -18,20 +28,22 @@ To install the package in editable mode (ideal for development), follow these st
 - `setuptools` 42 or higher (for building the package)
 - `cooethercat`
 
-## Installing Dependencies
 
-To install your package in editable mode for development, use the following command:
+### Where to look, how to use (for now)
 
-```bash
-pip install -e .
-```
+#### iPython play
 
-This will install the package, allowing you to edit it directly and have changes take effect immediately without reinstalling.
+Take a look at `lris2-csu/examples/demo.py` for local ipython commanding. 
 
-To install any optional dependencies, such as development dependencies, use:
+`sudo /home/l2dev/miniconda3/bin/conda run -n lris2csu --no-capture-output ipython`
 
-```bash
-pip install -e .[dev]
-```
 
----
+#### daemon/client ecosystem
+
+Take a look at Take a look at lris2-csu/examples/mktl_play.py for remote control via "mktl" commanding. Note that this would need spinning up:
+- Three Terminals:
+  - `conda run -n lris2csu python ~/src/mKTL/mktl/registry.py`
+  - `sudo /home/l2dev/miniconda3/bin/conda run -n lris2csu python ~/src/lris2-csu/lris2-csu/manager.py --eth <i.e. eno1> --cfg ~/src/lris2-csu/lris2-csu/config/csu.yaml`
+  - `conda run -n lris2csu python ~/src/mKTL/mktl/registry.py`
+- Command Terminal
+  - Start up ipython somewhere and instantiate `lris2-csu.remote.CSURemote()`
