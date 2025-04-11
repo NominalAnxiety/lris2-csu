@@ -1,9 +1,10 @@
 daemon:
   name: "lris2csu"  # Name under which it subscribes and publishes
   mktl:
-    cmd_port: 5555
-    pub_port: 5557
-    registry: "tcp://127.0.0.1:5570"
+    daemon_ip: '131.215.200.105'
+    cmd_port: 5558
+    pub_port: 5559
+    registry: "tcp://127.0.0.1:5571"
 
 #1.563 mm/tooth
 #370:1 gear ratio
@@ -23,6 +24,13 @@ daemon:
 #left side staggers by 8.2
 #sides should stagger by same around so tage average of 8.16 mm
 #Use furthest out (right inboard) as "true" 0 mm, all offsets are relative to this then
+
+ssi_encoder:
+  um_per_count: 0.03942899
+
+shaft_encoder:
+  um_per_count: 0.03942899
+
 
 hardware: !CSUHardwareConfig
   ethercat_device: "eno1"  # Device for connecting to the EtherCAT bus
