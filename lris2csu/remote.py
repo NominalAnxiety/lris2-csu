@@ -27,24 +27,24 @@ class CSURemote:
             self.coms.start()
 
     def configure(self, mask_config:MaskConfig, speed=8000):
-        self.coms.set('lris2csu.configure', dict(args=(mask_config.to_dict(),), kwargs={'speed':speed}),
-                      destination=self.csu_address)
+        return self.coms.set('lris2csu.configure', dict(args=(mask_config.to_dict(),), kwargs={'speed':speed}),
+                      destination=self.csu_address).json_data
 
     def reset(self):
-        self.coms.set('lris2csu.reset', dict(args=tuple()), destination=self.csu_address)
+        return self.coms.set('lris2csu.reset', dict(args=tuple()), destination=self.csu_address).json_data
 
     def calibrate(self, one_at_a_time=True):
-        self.coms.set('lris2csu.calibrate', dict(args=tuple(), kwargs={'one_at_a_time':one_at_a_time}),
-                      destination=self.csu_address)
+        return self.coms.set('lris2csu.calibrate', dict(args=tuple(), kwargs={'one_at_a_time':one_at_a_time}),
+                      destination=self.csu_address).json_data
 
     def shutdown(self):
-        self.coms.set('lris2csu.mktl_control', dict(args=tuple()), destination=self.csu_address)
+        return self.coms.set('lris2csu.mktl_control', dict(args=tuple()), destination=self.csu_address).json_data
 
     def status(self, verbose=False):
-        return self.coms.get('lris2csu.status', dict(args=tuple(), kwargs={'verbose':verbose}))
+        return self.coms.get('lris2csu.status', dict(args=tuple(), kwargs={'verbose':verbose})).json_data
 
     def stop(self):
-        self.coms.set('lris2csu.stop', dict(args=tuple()), destination=self.csu_address)
+        return self.coms.set('lris2csu.stop', dict(args=tuple()), destination=self.csu_address).json_data
 
     def clear_faults(self):
-        self.coms.set('lris2csu.clear_faults', dict(args=tuple()), destination=self.csu_address)
+        return self.coms.set('lris2csu.clear_faults', dict(args=tuple()), destination=self.csu_address).json_data
