@@ -510,7 +510,7 @@ class CSUHardware:
     def configure(self, mask_config:MaskConfig, speed=8000):
         bar_pos = self.configuration.compute_bar_count_positions(mask_config.to_dict())
         self.bus.enable_pdo()
-        self.bus.move_to(bar_pos, blocking=True, speed=speed)
+        self.bus.move_to(bar_pos, blocking=False, speed=speed)
         self.bus.disable_pdo()
 
     def halt(self):
