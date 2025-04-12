@@ -21,3 +21,8 @@ time.sleep(1)
 c.configure(stair_mask, speed=6500)
 time.sleep(1)
 c.stop()
+
+
+t=time.time()
+for i in range(10):
+    print(f"{i}: {time.time()-t:.2f}", c.status().json_data['mask'])
