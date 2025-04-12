@@ -44,7 +44,7 @@ class CSURemote:
 
     def status(self, verbose=False)->tuple[dict[Any, Any], MaskConfig]:
         x = self.coms.get('lris2csu.status', dict(args=tuple(), kwargs={'verbose':verbose})).json_data
-        return x['status'], MaskConfig.from_dict(x['mask_config'])
+        return x['status'], MaskConfig.from_dict(x['mask'])
 
     def stop(self):
         return self.coms.set('lris2csu.stop', dict(args=tuple()), destination=self.csu_address).json_data
