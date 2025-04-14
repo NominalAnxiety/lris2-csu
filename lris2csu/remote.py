@@ -1,11 +1,11 @@
 from typing import Any
 
-from lris2csu.slit import MaskConfig
+from lris2csu.slit import MaskConfig, Slit
 from mktl.mktlcoms import MKTLComs
 
 
 class CSURemote:
-    def __init__(self, csu_address:str=None, registry_address:str=None, start_comms=True):
+    def __init__(self, csu_address:str=None, registry_address:str=None, start_comms=True, dummy_mode=True):
         """
         Initializes a CSU Remote Control with either a specific address, or an mKTL registry address,
         optionally start mKTL communications.
@@ -19,8 +19,11 @@ class CSURemote:
         :type registry_address: str, optional
         :param start_comms: Indicates whether the communication system should start immediately or not.
         :type start_comms: bool, default is True
+        :param dummy_mode: Whether the manager is running in dummy mode.
+        :type dummy_mode: bool, default is False
         """
         self.csu_address = csu_address
+        self.dummy_mode = dummy_mode
         if not self.csu_address and not registry_address:
             raise ValueError("Either csu_address or registry_address must be specified.")
         self.coms = MKTLComs(registry_addr=registry_address)
@@ -42,9 +45,18 @@ class CSURemote:
     def shutdown(self):
         return self.coms.set('lris2csu.mktl_control', dict(args=tuple()), destination=self.csu_address).json_data
 
-    def status(self, verbose=False)->tuple[dict[Any, Any], MaskConfig]:
-        x = self.coms.get('lris2csu.status', dict(args=tuple(), kwargs={'verbose':verbose})).json_data
-        return x['status'], MaskConfig.from_dict(x['mask'])
+    def status(self, verbose=False) -> tuple[dict[Any, Any], MaskConfig]:
+        if self.dummy_mode:
+            # In dummy mode, return mock status and a simple dummy MaskConfig
+            mock_status = {'status': 'dummy_value'}
+            # Create a mock MaskConfig
+            mock_mask = MaskConfig(tuple(Slit(i, 130, 30) for i in range(12)))
+
+            return mock_status, mock_mask
+        else:
+            # In hardware mode, perform the usual status query
+            x = self.coms.get('lris2csu.status', dict(args=tuple(), kwargs={'verbose': verbose})).json_data
+            return x['status'], MaskConfig.from_dict(x['mask'])
 
     def stop(self):
         return self.coms.set('lris2csu.stop', dict(args=tuple()), destination=self.csu_address).json_data

@@ -27,20 +27,43 @@ class CSUServer:
     def __init__(self, config='csu.yaml', start=True, dummynode=False,
                  cmd_port=None, pub_port=None, registry_addr=None):
 
-        # Load and parse the configuration YAML file
+        # Load the configuration file
+        self.configuration = self.load_config(config)
+
+        # Set up hardware
+        self.set_up_hardware(dummynode)
+
+        # Set up CSU command handlers
+        self.set_up_commands()
+
+        # Set up communication
+        self.set_up_comms(cmd_port, pub_port, registry_addr)
+
+        # If start is True, start communication and reset hardware
+        if start:
+            self.comms.start()
+            self.csu.reset_bus()
+
+    def load_config(self, config):
         try:
             with open(config, 'r') as f:
-                self.configuration: dict = yaml.full_load(f)
-        except Exception as e:
-            raise RuntimeError(f"Failed to load configuration file '{config}': {e}")
+                return yaml.full_load(f)
+        except FileNotFoundError:
+            raise RuntimeError(f"Configuration file '{config}' not found.")
+        except yaml.YAMLError as e:
+            raise RuntimeError(f"YAML parsing error in '{config}': {e}")
 
+    def set_up_hardware(self, dummynode):
+        """Set up hardware based on configuration."""
         if dummynode:
             self.csu = CSUDummyHardware(self.configuration['hardware'])
         else:
             self.csu = CSUHardware(self.configuration['hardware'])
 
+    def set_up_commands(self):
+        """Set up CSU command handlers."""
         name = self.configuration['daemon']['name']
-        CSU_COMMANDS = {
+        self.CSU_COMMANDS = {
             f'{name}.configure': self.handler,
             f'{name}.reset': self.handler,
             f'{name}.calibrate': self.handler,
@@ -52,18 +75,19 @@ class CSUServer:
             f'{name}.clear_faults': self.handler,
         }
 
-        self.comms = MKTLComs(identity=name, authoritative_keys=CSU_COMMANDS,
+    def set_up_comms(self, cmd_port, pub_port, registry_addr):
+        """Set up the communication system."""
+        name = self.configuration['daemon']['name']
+        self.comms = MKTLComs(identity=name, authoritative_keys=self.CSU_COMMANDS,
                               registry_addr=registry_addr or self.configuration['daemon']['mktl']['registry'],
                               shutdown_callback=self.shutdown)
+
         cmd_port = cmd_port or self.configuration['daemon']['mktl']['cmd_port']
         pub_port = pub_port or self.configuration['daemon']['mktl']['pub_port']
 
         ip = self.configuration['daemon']['mktl']['daemon_ip']
         self.comms.bind(f'tcp://{ip}:{cmd_port}')
         self.comms.bind_pub(f'tcp://{ip}:{pub_port}')
-        if start:
-            self.comms.start()
-            self.csu.reset_bus()
 
     def shutdown(self):
         getLogger(__name__).info('Shutting down')
