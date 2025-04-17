@@ -1,11 +1,14 @@
 from logging import getLogger
 import threading
 import argparse
+from typing import Callable
+
 import yaml
 import functools
 
 from lris2csu.util import setup_logging
-from lris2csu.hardware import CSUHardware, MaskConfig
+from lris2csu.hardware import CSUHardware
+from lris2csu.slit import MaskConfig, Slit
 
 from mktl.mktlcoms import MKTLComs, MKTLMessage
 from mktl.registry import DEFAULT_REGISTRY_PORT
@@ -16,35 +19,81 @@ class CSUDummyHardware:
         getLogger(__name__).info(f"CSU Dummy Hardware initialized with config: {cfg}")
         self.cfg = cfg
 
-    def __getattr__(self, item):
-        def func(*args, **kwargs):
-            getLogger(__name__).info(f"Dummy CSUDummyHardware.{item} called with args={args} and kwargs={kwargs}")
-            return 'Boo!'
-        return func
+    def reset_bus(self):
+        pass
+
+    def calibrate(self, one_at_a_time=False):
+        pass
+
+    def configure(self, mask_config:MaskConfig, speed=8000):
+        pass
+
+    def halt(self):
+        pass
+
+    def status(self, verbose:bool=False)->dict:
+        d = {'node': '',
+                 'position': '',
+                 'target_position':  '',
+                 'error_reg': '',
+                 'error_code': '',}
+        if verbose:
+            d.update({
+                 'network_state': '',
+                 'mode_of_operation': '',
+                 'velocity_demand' : '',
+                 'velocity_actual': '',
+                 'velocity_profile': '',
+                 'velocity_target': '',
+                 'torque_actual' : '',
+                 'controlword': '',
+                 'statusword': '',
+                 'temperatue': '',
+                 })
+        status = {id: [d,d] for id in range(11)}
+
+        ret = {'status': status,
+               'mask': MaskConfig(tuple(Slit(i, 3*130/2-(i%2)*120, 20) for i in range(12))),
+               }
+        return ret
+
+    def clear_faults(self):
+        pass
+
+    def terminate_control(self):
+        pass
 
 
 class CSUServer:
+
     def __init__(self, config='csu.yaml', start=True, dummynode=False,
                  cmd_port=None, pub_port=None, registry_addr=None):
 
+        self.csu = None
+        self.comms: MKTLComs = None
+        self.CSU_COMMANDS: dict[str, Callable] = None
+
         # Load the configuration file
-        self.configuration = self.load_config(config)
+        self.configuration = self._load_config(config)
 
         # Set up hardware
-        self.set_up_hardware(dummynode)
+        hardware = CSUDummyHardware if dummynode else CSUHardware
+        self.csu = hardware(self.configuration['hardware'])
 
         # Set up CSU command handlers
-        self.set_up_commands()
+        self._set_up_commands()
 
         # Set up communication
-        self.set_up_comms(cmd_port, pub_port, registry_addr)
+        self._set_up_comms(cmd_port, pub_port, registry_addr)
 
         # If start is True, start communication and reset hardware
         if start:
             self.comms.start()
             self.csu.reset_bus()
 
-    def load_config(self, config):
+    @staticmethod
+    def _load_config(config):
+        """Load the configuration file."""
         try:
             with open(config, 'r') as f:
                 return yaml.full_load(f)
@@ -53,14 +102,7 @@ class CSUServer:
         except yaml.YAMLError as e:
             raise RuntimeError(f"YAML parsing error in '{config}': {e}")
 
-    def set_up_hardware(self, dummynode):
-        """Set up hardware based on configuration."""
-        if dummynode:
-            self.csu = CSUDummyHardware(self.configuration['hardware'])
-        else:
-            self.csu = CSUHardware(self.configuration['hardware'])
-
-    def set_up_commands(self):
+    def _set_up_commands(self):
         """Set up CSU command handlers."""
         name = self.configuration['daemon']['name']
         self.CSU_COMMANDS = {
@@ -75,12 +117,12 @@ class CSUServer:
             f'{name}.clear_faults': self.handler,
         }
 
-    def set_up_comms(self, cmd_port, pub_port, registry_addr):
+    def _set_up_comms(self, cmd_port, pub_port, registry_addr):
         """Set up the communication system."""
         name = self.configuration['daemon']['name']
         self.comms = MKTLComs(identity=name, authoritative_keys=self.CSU_COMMANDS,
                               registry_addr=registry_addr or self.configuration['daemon']['mktl']['registry'],
-                              shutdown_callback=self.shutdown)
+                              shutdown_callback=self.shutdown,)
 
         cmd_port = cmd_port or self.configuration['daemon']['mktl']['cmd_port']
         pub_port = pub_port or self.configuration['daemon']['mktl']['pub_port']
@@ -90,12 +132,17 @@ class CSUServer:
         self.comms.bind_pub(f'tcp://{ip}:{pub_port}')
 
     def shutdown(self):
+        """Shutdown the server."""
         getLogger(__name__).info('Shutting down')
         self.csu.terminate_control()
         self.comms.stop()
         exit(0)
 
     def handler(self, m:MKTLMessage):
+        """
+        Handle a command message.
+
+        TODO: This is gross and my fault -JIB, will clean up with better integrations with mktlcoms."""
         method = m.msg_type
         context = m.json_data
         key = m.key

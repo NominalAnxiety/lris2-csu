@@ -11,8 +11,22 @@ loggers:
       propagate: False
     __main__: DEBUG
   csuclient:
-    pysoem: INFO
+    cooethercat: DEBUG
+    pysoem: DEBUG
     lris2csu: DEBUG
+    lris2csu.util: INFO
+    mktl: DEBUG
+    "":
+      handlers: [ default ]
+      level: WARNING
+      propagate: False
+    __main__: DEBUG
+  registry:
+    cooethercat: DEBUG
+    pysoem: DEBUG
+    lris2csu: DEBUG
+    lris2csu.util: INFO
+    mktl: DEBUG
     "":
       handlers: [ default ]
       level: WARNING

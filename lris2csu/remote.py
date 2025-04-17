@@ -5,23 +5,21 @@ from mktl.mktlcoms import MKTLComs
 
 
 class CSURemote:
-    def __init__(self, csu_address:str=None, registry_address:str=None, start_comms=True, dummy_mode=True):
+    def __init__(self, csu_address:str=None, registry_address:str=None, start_comms=True, dummy_mode=False):
         """
-        Initializes a CSU Remote Control with either a specific address, or an mKTL registry address,
-        optionally start mKTL communications.
+        Initializes a CSU Remote Control with either a specific address or an mKTL registry
+        address, optionally starting mKTL communications.
 
-        If specified the csu_address will take precedence over the registry_address and is required if no registry
-        is provided.
+        If specified, the `csu_address` will take precedence over the `registry_address`
+        and is required if no registry is provided.
 
-        :param csu_address: The address of the CSU to establish a connection.
-        :type csu_address: str, optional
-        :param registry_address: The address of the registry used by the communication system.
-        :type registry_address: str, optional
-        :param start_comms: Indicates whether the communication system should start immediately or not.
-        :type start_comms: bool, default is True
-        :param dummy_mode: Whether the manager is running in dummy mode.
-        :type dummy_mode: bool, default is False
+        Args:
+            csu_address (str, optional): The address of the CSU to establish a connection.
+            registry_address (str, optional): The address of the registry used by the communication system.
+            start_comms (bool, optional): Indicates whether the communication system should start immediately. Default is True.
+            dummy_mode (bool, optional): Indicates whether the manager is running in dummy mode. Default is False.
         """
+
         self.csu_address = csu_address
         self.dummy_mode = dummy_mode
         if not self.csu_address and not registry_address:
@@ -51,8 +49,8 @@ class CSURemote:
             mock_status = {'status': 'dummy_value'}
             # Create a mock MaskConfig
             mock_mask = MaskConfig(tuple(Slit(i, 130, 30) for i in range(12)))
-
             return mock_status, mock_mask
+
         else:
             # In hardware mode, perform the usual status query
             x = self.coms.get('lris2csu.status', dict(args=tuple(), kwargs={'verbose': verbose})).json_data
