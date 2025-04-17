@@ -53,7 +53,7 @@ class CSUDummyHardware:
         status = {id: [d,d] for id in range(11)}
 
         ret = {'status': status,
-               'mask': MaskConfig(tuple(Slit(i, 3*130/2-(i%2)*120, 20) for i in range(12))),
+               'mask': MaskConfig(tuple(Slit(i, 3*130/2-(i%2)*120, 20) for i in range(12))).to_dict(),
                }
         return ret
 
@@ -66,12 +66,11 @@ class CSUDummyHardware:
 
 class CSUServer:
 
-    def __init__(self, config='csu.yaml', start=True, dummynode=False,
-                 cmd_port=None, pub_port=None, registry_addr=None):
+    def __init__(self, config='csu.yaml', start=True, dummynode=False, cmd_port=None, registry_addr=None):
 
         self.csu = None
-        self.comms: MKTLComs = None
-        self.CSU_COMMANDS: dict[str, Callable] = None
+        self.comms: MKTLComs | None = None
+        self.CSU_COMMANDS: dict[str, Callable] = {}
 
         # Load the configuration file
         self.configuration = self._load_config(config)
@@ -84,7 +83,11 @@ class CSUServer:
         self._set_up_commands()
 
         # Set up communication
-        self._set_up_comms(cmd_port, pub_port, registry_addr)
+        cmd_port = cmd_port or self.configuration['daemon']['mktl']['cmd_port']
+        ip = self.configuration['daemon']['mktl']['daemon_ip']
+        self.comms = MKTLComs(identity=self.configuration['daemon']['name'], authoritative_keys=self.CSU_COMMANDS,
+                              registry_addr=registry_addr or self.configuration['daemon']['mktl']['registry'],
+                              shutdown_callback=self.shutdown, bind_addr=f'tcp://{ip}:{cmd_port}', start=False)
 
         # If start is True, start communication and reset hardware
         if start:
@@ -116,20 +119,6 @@ class CSUServer:
             f'{name}.stop': self.handler,
             f'{name}.clear_faults': self.handler,
         }
-
-    def _set_up_comms(self, cmd_port, pub_port, registry_addr):
-        """Set up the communication system."""
-        name = self.configuration['daemon']['name']
-        self.comms = MKTLComs(identity=name, authoritative_keys=self.CSU_COMMANDS,
-                              registry_addr=registry_addr or self.configuration['daemon']['mktl']['registry'],
-                              shutdown_callback=self.shutdown,)
-
-        cmd_port = cmd_port or self.configuration['daemon']['mktl']['cmd_port']
-        pub_port = pub_port or self.configuration['daemon']['mktl']['pub_port']
-
-        ip = self.configuration['daemon']['mktl']['daemon_ip']
-        self.comms.bind(f'tcp://{ip}:{cmd_port}')
-        self.comms.bind_pub(f'tcp://{ip}:{pub_port}')
 
     def shutdown(self):
         """Shutdown the server."""
@@ -181,8 +170,6 @@ def parse_cl():
     parser = argparse.ArgumentParser(description='LRIS2 CSU Server', add_help=True)
     parser.add_argument('-p', '--port', dest='port', action='store', required=False, type=int,
                         help='Server port', default=None)
-    parser.add_argument('--status_port', dest='status_port', action='store', required=False, type=int,
-                        help='Status Port', default=None)
     parser.add_argument('--registry', dest='registry', action='store', required=False, type=str,
                         help='Registry Address', default='')
     parser.add_argument('--eth', dest='ethernet_device', action='store', required=True, type=str,
@@ -203,6 +190,6 @@ if __name__ == '__main__':
     setup_logging('csuserver')
 
     app = CSUServer(config=args.config_yaml, start=True, dummynode=args.dummy_mode,
-                    cmd_port=args.port, pub_port=args.status_port, registry_addr=args.registry)
+                    cmd_port=args.port, registry_addr=args.registry)
     while True:
         threading.Event().wait(60)
