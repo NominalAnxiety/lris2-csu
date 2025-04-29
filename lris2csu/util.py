@@ -1,6 +1,7 @@
 import importlib.resources
 import yaml
 import logging
+import logging.config
 import zmq
 import os
 import uuid
