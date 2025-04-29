@@ -5,7 +5,7 @@ from mktl.mktlcoms import MKTLComs
 
 
 class CSURemote:
-    def __init__(self, csu_address:str=None, registry_address:str=None, start_comms=True, dummy_mode=False):
+    def __init__(self, csu_address:str=None, start_comms=True, dummy_mode=False):
         """
         Initializes a CSU Remote Control with either a specific address or an mKTL registry
         address, optionally starting mKTL communications.
@@ -15,16 +15,13 @@ class CSURemote:
 
         Args:
             csu_address (str, optional): The address of the CSU to establish a connection.
-            registry_address (str, optional): The address of the registry used by the communication system.
             start_comms (bool, optional): Indicates whether the communication system should start immediately. Default is True.
             dummy_mode (bool, optional): Indicates whether the manager is running in dummy mode. Default is False.
         """
 
         self.csu_address = csu_address
         self.dummy_mode = dummy_mode
-        if not self.csu_address and not registry_address:
-            raise ValueError("Either csu_address or registry_address must be specified.")
-        self.coms = MKTLComs(registry_addr=registry_address)
+        self.coms = MKTLComs()
 
         if start_comms:
             self.coms.start()

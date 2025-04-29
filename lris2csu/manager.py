@@ -86,8 +86,7 @@ class CSUServer:
         cmd_port = cmd_port or self.configuration['daemon']['mktl']['cmd_port']
         ip = self.configuration['daemon']['mktl']['daemon_ip']
         self.comms = MKTLComs(identity=self.configuration['daemon']['name'], authoritative_keys=self.CSU_COMMANDS,
-                              registry_addr=registry_addr or self.configuration['daemon']['mktl']['registry'],
-                              shutdown_callback=self.shutdown, bind_addr=f'tcp://{ip}:{cmd_port}', start=False)
+                              shutdown_callback=self.shutdown, pub_address=f'tcp://{ip}:{cmd_port+1}', start=False)
 
         # If start is True, start communication and reset hardware
         if start:
