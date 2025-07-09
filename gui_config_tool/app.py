@@ -1,3 +1,8 @@
+"""
+The GUI is in its very early stages. Its current features are the ability to take in a starlist file
+and a menu that doesn't do anything. 7/9/25
+"""
+
 
 #just importing everything for now. When on the final stages I will not import what I don't need
 from targetListWidget import TargetDisplayWidget
@@ -11,14 +16,11 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 
-#for the list widgets I don't want them to be selectable so I will just do a list of label widgets in a layout
-
-
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("LRIS-2 Slit Configuration Tool")
-        self.setGeometry(100,100,1000,1000)
+        self.setGeometry(100,100,800,800)
         self.setMenuBar(MenuBar()) #sets the menu bar
 
         main_layout = QHBoxLayout()
