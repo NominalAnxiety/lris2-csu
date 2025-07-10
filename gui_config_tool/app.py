@@ -1,13 +1,15 @@
 """
 The GUI is in its very early stages. Its current features are the ability to take in a starlist file
+and then display that file in a list
 and a menu that doesn't do anything. 7/9/25
 """
 
 
 #just importing everything for now. When on the final stages I will not import what I don't need
 from targetListWidget import TargetDisplayWidget
-from importTargetListandRun import ImportTargetListandRun
+from importTargetListandRun import MaskGenWidget
 from menuBar import MenuBar
+from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import (
     QApplication,
     QMainWindow,
@@ -16,6 +18,14 @@ from PyQt6.QtWidgets import (
     QWidget,
     QLabel,
 )
+
+class TempWidgets(QLabel):
+    def __init__(self,w,h,text:str="hello"):
+        super().__init__()
+        self.setFixedSize(w,h)
+        self.setText(text)
+        self.setAlignment(Qt.AlignmentFlag.AlignHCenter | Qt.AlignmentFlag.AlignVCenter)
+        self.setStyleSheet("border: 2px solid black;")
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -28,15 +38,21 @@ class MainWindow(QMainWindow):
         layoutH1 = QHBoxLayout()
         layoutV1 = QVBoxLayout() #left side
         layoutV2 = QVBoxLayout() #right side
+
+        #main_layout.setSpacing(2)
+        #main_layout.setContentsMargins(2,10,2,2)
+        #layoutH1.setSpacing(2)
+        #layoutV1.setSpacing(2)
+        #layoutV2.setSpacing(2)
         
-        import_target_list_display = ImportTargetListandRun()
+        import_target_list_display = MaskGenWidget()
         sample_data = [[0,1,1,1],[1,0,1,1]]
 
         target_display = TargetDisplayWidget(sample_data)
-        temp_widget1 = QLabel("hello")
-        temp_widget2 = QLabel("hello")
-        temp_widget3 = QLabel("hello")
-        import_target_list_display.setStyleSheet("border: 2px solid black;")
+        temp_widget1 = TempWidgets(250,300,"Mask Configurations\nWill display a list of\nall previous configurations")
+        temp_widget2 = TempWidgets(200,500,"This will display\nall of the widths\nand positions of\nthe bar pairs")
+        temp_widget3 = TempWidgets(500,500,"This will display the current Mask Configuration")
+        #import_target_list_display.setStyleSheet("border: 2px solid black;")
 
         import_target_list_display.change_data.connect(target_display.change_data)
 
@@ -56,10 +72,6 @@ class MainWindow(QMainWindow):
         widget.setLayout(main_layout)
         self.setCentralWidget(widget)
 
-    def update_list_display(self,data):
-        self.data = data
-        self.target_display = TargetDisplayWidget(self.data)
-        self.target_display.update()
 
 app = QApplication([])
 window = MainWindow()

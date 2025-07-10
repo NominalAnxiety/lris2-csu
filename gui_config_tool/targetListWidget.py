@@ -1,7 +1,7 @@
 
 #from inputTargets import TargetList
 from menuBar import MenuBar
-from PyQt6.QtCore import Qt, QAbstractTableModel, QObject, pyqtSignal,pyqtSlot
+from PyQt6.QtCore import Qt, QAbstractTableModel, pyqtSlot
 from PyQt6.QtWidgets import (
     QWidget,
     QTableView,
@@ -12,8 +12,16 @@ from PyQt6.QtWidgets import (
 )
 class TableModel(QAbstractTableModel):
     def __init__(self, data=[]):
+        self
         super().__init__()
         self._data = data
+    def headerData(self, section, orientation, role = ...):
+        if role == Qt.ItemDataRole.DisplayRole:
+            #should add something about whether its vertical or horizontal
+            if orientation == Qt.Orientation.Horizontal:
+                return ["Name","Ra","Dec","equinox"][section]
+        return super().headerData(section, orientation, role)
+
 
     def data(self, index, role):
         if role == Qt.ItemDataRole.DisplayRole:
@@ -31,16 +39,21 @@ class TargetDisplayWidget(QWidget):
     def __init__(self,data=[]):
         super().__init__()
         #self.setGeometry(600,600,100,500)
+        self.setFixedSize(700,200)
         self.setStyleSheet("border: 2px solid black;")
         self.data = data
 
         self.table = QTableView()
         
         self.model = TableModel(self.data)
+        
         self.table.setModel(self.model)
 
 
+
+
         layout = QVBoxLayout()
+
 
         layout.addWidget(self.table)
 
