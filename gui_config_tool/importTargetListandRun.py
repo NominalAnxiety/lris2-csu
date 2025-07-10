@@ -24,7 +24,7 @@ class MaskGenWidget(QWidget):
 
         
         #self.setFixedSize(200,400)
-        self.setStyleSheet("border: 2px solid black;")
+        #self.setStyleSheet("border: 2px solid black;")
         import_target_list_button = QPushButton(text = "Import Target List")
         name_of_mask = QLineEdit()
         name_of_mask.setAlignment(Qt.AlignmentFlag.AlignTop)
@@ -35,13 +35,12 @@ class MaskGenWidget(QWidget):
         secondary_layout = QFormLayout()
         group_layout = QVBoxLayout()
         group_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
+        group_box.setStyleSheet("border: 2px solid black;")
 
         
 
         import_target_list_button.clicked.connect(self.starlist_file_button_clicked)
 
-
-        main_widget = QWidget()
 
         #layout.addWidget(main_widget)
 

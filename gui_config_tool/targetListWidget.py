@@ -35,6 +35,8 @@ class TableModel(QAbstractTableModel):
     def columnCount(self, index):
 
         return len(self._data[0])
+    
+
 class TargetDisplayWidget(QWidget):
     def __init__(self,data=[]):
         super().__init__()
@@ -49,14 +51,9 @@ class TargetDisplayWidget(QWidget):
         
         self.table.setModel(self.model)
 
-
-
-
         layout = QVBoxLayout()
 
-
         layout.addWidget(self.table)
-
         self.setLayout(layout)
         #self.table.setModel(self.table)
     @pyqtSlot(list)
