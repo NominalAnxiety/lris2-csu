@@ -1,39 +1,59 @@
 
 #from inputTargets import TargetList
 from menuBar import MenuBar
+from PyQt6.QtCore import Qt, QAbstractTableModel, QObject, pyqtSignal,pyqtSlot
 from PyQt6.QtWidgets import (
     QWidget,
-    QTableView
+    QTableView,
+    QVBoxLayout,
+    QTableWidget
+
+
 )
-
-
-
-class TargetDisplayWidget(QWidget):
-    def __init__(self,data):
+class TableModel(QAbstractTableModel):
+    def __init__(self, data=[]):
         super().__init__()
-        self.setGeometry(600,600,100,500)
+        self._data = data
+
+    def data(self, index, role):
+        if role == Qt.ItemDataRole.DisplayRole:
+
+            return self._data[index.row()][index.column()]
+
+    def rowCount(self, index):
+
+        return len(self._data)
+
+    def columnCount(self, index):
+
+        return len(self._data[0])
+class TargetDisplayWidget(QWidget):
+    def __init__(self,data=[]):
+        super().__init__()
+        #self.setGeometry(600,600,100,500)
+        self.setStyleSheet("border: 2px solid black;")
+        self.data = data
 
         self.table = QTableView()
+        
+        self.model = TableModel(self.data)
+        self.table.setModel(self.model)
 
-        self.data = data
+
+        layout = QVBoxLayout()
+
+        layout.addWidget(self.table)
+
+        self.setLayout(layout)
         #self.table.setModel(self.table)
+    @pyqtSlot(list)
+    def change_data(self,data):
+        self.data = data
+        self.model = TableModel(self.data)
+        self.table.setModel(self.model)
 
 
 
 
-        
-        #won't be using QlistWidget because I don't want the targets to be selectable
-        #format this string so it looks nice
-        #initial_label = QLabel(f"{"Name":<16}{"RA":<16}{"Dec":<16}{"Equinox":<16}") #should include target name, RA, Dec, and Equinox
-        #initial_label.setAlignment(Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignLeft)
 
-        #initial_label.setFrameStyle(QFrame.Shape.Panel | QFrame.Shadow.Sunken)
-        #initial_label.setLineWidth(2)
 
-        #layout = QVBoxLayout()
-        #layout.addWidget(initial_label)
-        #self.setLayout(layout)
-
-        #self.show()
-
-        
