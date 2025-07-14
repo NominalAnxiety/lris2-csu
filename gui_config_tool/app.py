@@ -3,6 +3,15 @@ The GUI is in its very early stages. Its current features are the ability to tak
 and then display that file in a list
 and a menu that doesn't do anything. 7/9/25
 """
+"""
+random stuff
+GUI has to be able to send a command with the target lists to the mask back end
+to call the slit mask algorithm with the code from the backend
+
+the back end kind of already parses through a file that sorts all of the objects so I will
+just take that and display that instead of through my awful input targets function 
+(they also have a function to view the list)
+"""
 
 
 #just importing everything for now. When on the final stages I will not import what I don't need

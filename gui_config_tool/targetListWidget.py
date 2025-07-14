@@ -42,7 +42,7 @@ class TargetDisplayWidget(QWidget):
         super().__init__()
         #self.setGeometry(600,600,100,500)
         self.setFixedSize(700,200)
-        self.setStyleSheet("border: 2px solid black;")
+        #self.setStyleSheet("border: 2px solid black;")
         self.data = data
 
         self.table = QTableView()

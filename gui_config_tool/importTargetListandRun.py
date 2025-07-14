@@ -35,7 +35,7 @@ class MaskGenWidget(QWidget):
         secondary_layout = QFormLayout()
         group_layout = QVBoxLayout()
         group_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
-        group_box.setStyleSheet("border: 2px solid black;")
+        #group_box.setStyleSheet("border: 2px solid black;")
 
         
 
